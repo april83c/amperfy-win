@@ -21,6 +21,7 @@ public sealed partial class EntityTile : UserControl
     private readonly FontIcon _favorite;
     private readonly StackPanel _root;
     private LibraryItem? _item;
+    private LibraryListContext? _subscribedContext;
     private bool _isSubscribed;
 
     public EntityTile()
@@ -124,6 +125,7 @@ public sealed partial class EntityTile : UserControl
 
     public void Bind(LibraryItem item)
     {
+        if (_isSubscribed && _subscribedContext != item.Context) Unsubscribe();
         _item = item;
         if (item.Container is { } container) ArtworkLoader.Request(container);
         Refresh();
@@ -136,7 +138,8 @@ public sealed partial class EntityTile : UserControl
         _isSubscribed = true;
         LibraryEventHub.EnsureInitialized();
         LibraryEventHub.EntityChanged += OnEntityChanged;
-        _item.Context.LayoutChanged += Refresh;
+        _subscribedContext = _item.Context;
+        _subscribedContext.LayoutChanged += Refresh;
     }
 
     private void Unsubscribe()
@@ -144,7 +147,8 @@ public sealed partial class EntityTile : UserControl
         if (!_isSubscribed) return;
         _isSubscribed = false;
         LibraryEventHub.EntityChanged -= OnEntityChanged;
-        if (_item is not null) _item.Context.LayoutChanged -= Refresh;
+        if (_subscribedContext is not null) _subscribedContext.LayoutChanged -= Refresh;
+        _subscribedContext = null;
     }
 
     private void OnEntityChanged(object entity)

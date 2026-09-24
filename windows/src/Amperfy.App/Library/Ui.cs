@@ -11,8 +11,19 @@ namespace Amperfy.App.Library;
 /// Small helpers to build the library UI in code (keeps the XAML minimal).
 public static class Ui
 {
-    public static object? Resource(string key) =>
-        Application.Current.Resources.TryGetValue(key, out var value) ? value : null;
+    /// Application resource (incl. the merged WinUI resources); null if it doesn't exist.
+    public static object? Resource(string key)
+    {
+        try
+        {
+            if (Application.Current.Resources.TryGetValue(key, out var value)) return value;
+            return Application.Current.Resources[key];
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     public static Style? Style(string key) => Resource(key) as Style;
 

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using Amperfy.Core.Common;
 using Microsoft.UI.Xaml.Data;
 using Windows.Foundation;
@@ -46,14 +48,25 @@ public sealed class IncrementalItems : ObservableCollection<object>, ISupportInc
         return Task.FromResult(new LoadMoreItemsResult { Count = (uint)added }).AsAsyncOperation();
     }
 
-    /// Loads the next page(s) synchronously. Returns the number of added items.
+    /// Loads the next page(s) synchronously. Returns the number of added items. Big loads (jump to
+    /// a far position) raise a single reset notification instead of one per item.
     public int LoadMore(int count)
     {
         if (!HasMoreItems) return 0;
         var take = Math.Min(count, TotalCount - _loadedEntityCount);
         var page = _loadPage(_loadedEntityCount, take);
         if (page.Count < take) _isExhausted = true;
-        foreach (var item in page) Add(item);
+        if (page.Count > 500)
+        {
+            foreach (var item in page) Items.Add(item);
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+        else
+        {
+            foreach (var item in page) Add(item);
+        }
         _loadedEntityCount += page.Count;
         return page.Count;
     }

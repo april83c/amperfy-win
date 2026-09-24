@@ -228,7 +228,7 @@ public static class EntityActions
                 c.IsGoToSiteUrl = !string.IsNullOrEmpty(radio.SiteUrl);
                 break;
             case Podcast:
-                c.IsPlay = (online || container.Playables.HasCachedItems()) && shuffleEnabled;
+                c.IsPlay = online || container.Playables.HasCachedItems();
                 c.IsPodcastQueue = true;
                 c.IsShowPodcastDetails = true;
                 break;

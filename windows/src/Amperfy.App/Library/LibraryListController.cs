@@ -49,6 +49,18 @@ public sealed class LibraryListController
         list.DoubleTapped += OnDoubleTapped;
         list.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => _lastPointerPress = DateTime.UtcNow), true);
         list.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnKeyDown), true);
+        list.ContextRequested += OnContextRequested;
+    }
+
+    /// Keyboard context menu (Shift+F10 / menu key) on a focused item: the row's context menu.
+    private void OnContextRequested(UIElement sender, ContextRequestedEventArgs e)
+    {
+        if (e.OriginalSource is not SelectorItem container) return;
+        var root = container.ContentTemplateRoot as UIElement;
+        var flyout = root?.ContextFlyout ?? ((root as UserControl)?.Content as UIElement)?.ContextFlyout;
+        if (flyout is null) return;
+        e.Handled = true;
+        flyout.ShowAt(container, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
     }
 
     public LibraryListContext Context { get; }
