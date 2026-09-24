@@ -82,7 +82,7 @@ public sealed class AddToPlaylistDialog
         var createButton = Ui.TextButton("Create", Icons.Add, (_, _) => _ = CreatePlaylistAsync(), tooltip: "Create a new playlist");
         Grid.SetColumn(createButton, 1);
         newRow.Children.Add(createButton);
-        _newNameBox.KeyDown += (_, e) =>
+        _newNameBox.KeyDown += (sender, e) =>
         {
             if (e.Key != VirtualKey.Enter) return;
             e.Handled = true;
