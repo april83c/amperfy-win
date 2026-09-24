@@ -4,7 +4,8 @@ This covers the WinUI 3 app in `src/Amperfy.App`. For the core library, see `ARC
 
 ## Layout
 - `App.xaml(.cs)` starts the app: `AppServices.Initialize()`, then `MainWindow`.
-- `MainWindow` holds the custom `TitleBar` (back button, pane toggle, search box), the root `Frame` and the alert host.
+- `MainWindow` holds the custom `TitleBar` (back button, pane toggle, search box, app menu), the root `Frame` and the alert host.
+  - The app menu (`Services/AppMenu`, the "…" button in `TitleBar.RightHeader`) replaces the macOS main menu. New commands should go there too.
   - The root frame shows `LoginPage`, `SyncPage` or `ShellPage`.
 - `Pages/ShellPage` holds:
   - the `NavigationView` sidebar: Search, Home, the library categories of `AccountSetting.LibraryDisplaySettings`, account switcher and Settings;
@@ -78,20 +79,21 @@ The XAML compiler runs only in the Windows CI build. `scripts/linux-check.sh` co
 - `Services/Player/PlayerUi` holds the shared player logic (port of `PlayerUIHandler`):
   - commands: `TogglePlayPause`, `Previous`/`Next` (skip in podcast mode), `SetVolume`, `ClearUserQueue`, …;
   - navigation: `ShowAlbum/ShowArtist(playable)`, `ShowEntity(entity)`;
-  - panes and windows: `ToggleQueuePane`, `ToggleLyricsPane`, `ToggleNowPlaying`, `ToggleMiniPlayer`;
-  - menus and buttons: `CreateSleepTimerMenuItem`, `CreatePlaybackRateMenuItem`, `CreatePlayerOptionsFlyout`, `CreateVolumeButton`.
+  - panes and windows: `ToggleQueuePane`, `ToggleLyricsPane`, `ShowCurrentLyrics`, `ToggleNowPlaying`, `ToggleMiniPlayer`;
+  - menus and buttons: `CreateSleepTimerMenuItem`, `CreatePlaybackRateMenuItem`, `CreatePlayerOptionsFlyout`, `CreateCurrentItemFlyout` (entity menu of the playing item), `CreateVolumeButton`.
 - After changing the queues outside the player facade's notifying methods (remove, move, clear), call `PlayerUi.NotifyQueueModified()`.
 - To observe the player, keep a `PlayerObserver` in a field, call `Register()` once, and set `IsActive` on `Loaded` / `Unloaded`. The player keeps its observers as weak references.
 - Reusable controls live in `Controls/Player`: `PlayerTransportControls`, `SeekBar`, `QueueView`, `LyricsView` and `MiniPlayerWindow`. Create them in code.
 - Pages you navigate to must be XAML pages (`.xaml` + `.xaml.cs`). `Frame.Navigate` to a code-only page crashes.
-- Keyboard shortcuts are in `PlayerKeyboardShortcuts.All`. Media keys go through the system media transport controls (`Services/Audio/SystemMediaControls`).
+- Keyboard shortcuts are handled in `PlayerKeyboardShortcuts`. Its lists `All` (player) and `App` (navigation, lists) feed `KeyboardShortcutsDialog` (F1); keep them in sync when adding a shortcut. Media keys go through the system media transport controls (`Services/Audio/SystemMediaControls`).
 
 ## Library browsing UI (`Library/`, `Controls/Library/`)
 - **Context menus / actions:** `Library/EntityActions` (port of `EntityPreviewActionBuilder`).
   - `EntityActions.CreateMenuFlyout(container, new EntityActionOptions { PlayContext, PlayerIndex, HostPageType, Changed, ExtraItems })` returns a `MenuFlyout` built when it opens (current favorite/rating/cache state, online/offline mode).
-  - The queue view passes `PlayerIndex` ("Play" jumps to the queue entry, no queue actions).
+  - The queue view passes `PlayerIndex` ("Play" jumps to the queue entry, no queue actions) and adds its queue items through `ExtraItems`.
   - Helpers: `Open(entity, scrollTo)` (detail page; songs play), `PlayContainerAsync`, `ToggleFavoriteAsync`, `SetRatingAsync`, `DownloadAsync`, `IsPlayable`, `PrefetchAsync`.
-  - `EntityActions.ShowLyricsHandler` (`Action<Song>`) replaces the default lyrics dialog.
+  - `EntityActions.ShowLyricsHandler` (`Action<Song>`) replaces the default lyrics dialog. `PlayerUiService` sets it: the playing song opens the player lyrics.
+  - Share / Save a Copy of songs and episodes: `Library/PlayableShare`.
 - **Rows / tiles:** code-built controls, used from XAML templates as `<controls:LibraryRow />` (picks `PlayableRow`, `PodcastEpisodeRow`, `EntityRow` or a section header) and `<controls:EntityTile />`.
   - Items are `LibraryItem(entity, LibraryListContext, index)`; the context holds the play context provider, host page, display style.
   - `LibraryListController` wires a ListView/GridView: click opens containers, double click / Enter plays, Shift+F10 context menu, `SetIncrementalSource(loader, count)` for big lists (`IncrementalItems`).

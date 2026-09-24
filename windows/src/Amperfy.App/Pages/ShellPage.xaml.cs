@@ -43,6 +43,18 @@ public sealed partial class ShellPage : Page
         RebuildMenu();
         _services.Kit.StartManagersForNormalOperation();
         _services.Navigation.Navigate(typeof(HomePage), clearBackStack: true);
+        ShowWelcomeInfoIfNeeded();
+    }
+
+    /// Port of WelcomePopupPresenter: the synchronization hint is shown once. (The notification authorization
+    /// popup isn't needed: Windows notifications are managed in the Windows settings.)
+    private void ShowWelcomeInfoIfNeeded()
+    {
+        var app = _services.Settings.App;
+        if (app.IsLibrarySyncInfoReadByUser) return;
+        app.IsLibrarySyncInfoReadByUser = true;
+        _services.Alerts.ShowNotice("Synchronization",
+            "Your music collection is constantly updating. Already synced library items are offline available. If library items (artists/albums/songs) are not shown in your collection please use the various search functionalities to synchronize with the server.");
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

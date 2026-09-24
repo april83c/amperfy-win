@@ -39,7 +39,22 @@ public static class PlayerKeyboardShortcuts
         new("Ctrl+Shift+M", "Open / close the mini player"),
     ];
 
+    /// App and library shortcuts (navigation, lists), shown in the keyboard shortcuts dialog (F1).
+    public static readonly IReadOnlyList<PlayerShortcut> App =
+    [
+        new("F1", "Keyboard shortcuts (this list)"),
+        new("Ctrl+,", "Settings"),
+        new("Alt+Left / mouse back button", "Go back"),
+        new("Enter", "Open the selected item or play the selected song / episode"),
+        new("Double click", "Play a song, episode or radio"),
+        new("Right click / Shift+F10 / Menu key", "Context menu of the selected item"),
+        new("Delete", "Remove the selected item (queue, playlist while editing)"),
+        new("F5", "Reload the current page from the server"),
+        new("Esc", "Clear the filter of a list; close the now playing view"),
+    ];
+
     private const VirtualKey PeriodKey = (VirtualKey)190; // VK_OEM_PERIOD
+    private const VirtualKey CommaKey = (VirtualKey)188; // VK_OEM_COMMA
 
     /// Attaches the shortcuts to the window content. <paramref name="isEnabled"/> is checked for every key press
     /// (e.g. only while the main shell is shown).
@@ -74,10 +89,24 @@ public static class PlayerKeyboardShortcuts
         var ctrl = IsDown(VirtualKey.Control);
         var shift = IsDown(VirtualKey.Shift);
         var alt = IsDown(VirtualKey.Menu);
-        if (alt || IsDown(VirtualKey.LeftWindows) || IsDown(VirtualKey.RightWindows)) return false;
+        if (IsDown(VirtualKey.LeftWindows) || IsDown(VirtualKey.RightWindows)) return false;
+        if (alt)
+        {
+            if (key == VirtualKey.Left && !ctrl && !shift && window is MainWindow && AppServices.Instance.Navigation.CanGoBack)
+            {
+                AppServices.Instance.Navigation.GoBack();
+                return true;
+            }
+            return false;
+        }
 
         if (!ctrl)
         {
+            if (key == VirtualKey.F1 && !shift)
+            {
+                _ = KeyboardShortcutsDialog.ShowAsync();
+                return true;
+            }
             if (key == VirtualKey.Space && !shift && !UsesSpace(source))
             {
                 PlayerUi.TogglePlayPause();
@@ -114,6 +143,9 @@ public static class PlayerKeyboardShortcuts
                 return true;
             case PeriodKey when !shift:
                 PlayerUi.Stop();
+                return true;
+            case CommaKey when !shift:
+                AppMenu.OpenSettings();
                 return true;
             case VirtualKey.H when !shift:
                 PlayerUi.ToggleShuffle();

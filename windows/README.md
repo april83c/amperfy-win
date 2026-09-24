@@ -16,7 +16,7 @@ implementation. `docs/PORTING.md` explains why the port uses C# rather than Swif
   - Each page has sorting, filters, a "Jump to" letter menu, in-page search and grid/list views.
 - **Home:** configurable sections (random, newest and recently played albums; random artists and songs; playlists; podcast episodes; radios).
 - **Search:** local and server search with categories and search history.
-- **Context menus:** Play, Shuffle, Instant Mix, queue insert/append, show album/artist, lyrics, favorite, rating, add to playlist, download, delete cache, delete on server, go to site, copy ID.
+- **Context menus:** Play, Shuffle, Instant Mix, queue insert/append, show album/artist, lyrics, favorite, rating, add to playlist, download, delete cache, delete on server, share, save a copy, go to site, copy ID. The same menu is used in lists, the queue and the player.
 - **Playlists:** create, rename, reorder by drag & drop, remove items, add songs; synced to the server.
 - **Player:**
   - Gapless playback (MediaPlayer + MediaPlaybackList).
@@ -26,7 +26,8 @@ implementation. `docs/PORTING.md` explains why the port uses C# rather than Swif
 - **Player UI:**
   - Player bar, queue pane (drag to reorder), synced lyrics pane and a now playing page.
   - Mini player (compact overlay, always on top).
-  - Keyboard shortcuts; see `PlayerKeyboardShortcuts.All`.
+  - An app menu (the "…" button in the title bar) with the commands of the macOS main menu.
+  - Keyboard shortcuts; F1 lists them (`PlayerKeyboardShortcuts`).
 - **Windows integration:**
   - Media keys and the Windows media flyout (System Media Transport Controls).
   - Notifications for new podcast episodes and finished downloads.
@@ -59,7 +60,7 @@ To publish a release, run the `Windows release` workflow (manually with a tag, o
 | `src/Amperfy.App` | WinUI 3 app: pages, controls, audio engine, system integration |
 | `tests/Amperfy.Core.Tests` | xUnit tests; the ported Swift tests plus new ones |
 | `scripts/` | CI and developer scripts |
-| `docs/` | `ARCHITECTURE.md` (core conventions), `UI-GUIDE.md` (app conventions), `PORTING.md` (why C#) |
+| `docs/` | `ARCHITECTURE.md` (core conventions), `UI-GUIDE.md` (app conventions), `PORTING.md` (why C#), `PARITY.md` (feature parity with the Swift app) |
 
 On Windows or Linux:
 - `dotnet test windows/tests/Amperfy.Core.Tests` runs the core tests.

@@ -317,10 +317,19 @@ public static class PlayerUi
         Services.Navigation.Navigate(target.Page, target.Parameter);
     }
 
+    /// Shows the album of a song (scrolled to the song) or the podcast of an episode (scrolled to the episode).
     public static void ShowAlbum(AbstractPlayable? playable)
     {
-        if (playable?.AsSong?.Album is { } album) ShowEntity(album);
-        else if (playable?.AsPodcastEpisode?.Podcast is { } podcast) ShowEntity(podcast);
+        if (playable?.AsSong is { Album: { } album } song) ShowEntity(album, song);
+        else if (playable?.AsPodcastEpisode is { Podcast: { } podcast } episode) ShowEntity(podcast, episode);
+    }
+
+    /// Shows the detail page of an entity and scrolls to one of its elements.
+    public static void ShowEntity(object entity, object scrollTo)
+    {
+        if (PageRegistry.ForEntity(entity) is not { } target) return;
+        BringMainWindowToFront();
+        Services.Navigation.Navigate(target.Page, new Amperfy.App.Library.EntityNavigationArgs(target.Parameter, scrollTo));
     }
 
     public static void ShowArtist(AbstractPlayable? playable)
@@ -355,6 +364,21 @@ public static class PlayerUi
     public static void ToggleQueuePane() => ShowQueuePane(!IsQueuePaneVisible);
 
     public static void ToggleLyricsPane() => ShowLyricsPane(!IsLyricsPaneVisible);
+
+    /// Shows the synced lyrics of the currently playing song: the lyrics tab of the now playing page when it is
+    /// open, otherwise the lyrics side pane. False if lyrics can't be shown in the player (e.g. podcast mode).
+    public static bool ShowCurrentLyrics()
+    {
+        if (!IsLyricsAvailable || ShellPage.Current is null) return false;
+        BringMainWindowToFront();
+        if (Services.Navigation.Frame?.Content is NowPlayingPage nowPlaying)
+        {
+            nowPlaying.ShowLyricsTab();
+            return true;
+        }
+        ShowLyricsPane(true);
+        return true;
+    }
 
     public static void ShowQueuePane(bool show)
     {
@@ -532,6 +556,11 @@ public static class PlayerUi
         {
             yield return MenuItem("Clear Context Queue", Amperfy.App.Helpers.Icons.Delete, ClearContextQueue);
         }
+        if (player.PlayerMode == PlayerMode.Music && Services.Settings.User.IsOnlineMode &&
+            (player.CurrentlyPlaying is not null || player.PrevQueueCount > 0 || player.NextQueueCount > 0))
+        {
+            yield return MenuItem("Add Context Queue to Playlist", Amperfy.App.Helpers.Icons.Playlist, () => _ = AddContextQueueToPlaylistAsync());
+        }
         yield return new MenuFlyoutSeparator();
         yield return CreateSleepTimerMenuItem();
         yield return CreatePlaybackRateMenuItem();
@@ -563,6 +592,21 @@ public static class PlayerUi
         yield return new MenuFlyoutSeparator();
         yield return MenuItem("Player Info", Amperfy.App.Helpers.Icons.Info, () => _ = ShowPlayerInfoAsync());
     }
+
+    /// Swift "Add Context Queue to Playlist": previous items, the current song and the next items (songs of one
+    /// account) to a playlist.
+    public static async Task AddContextQueueToPlaylistAsync()
+    {
+        var songs = PlayerQueueUtil.ContextQueueSongsForPlaylist(Player);
+        if (songs.Count == 0 || songs[0].Account is not { } account) return;
+        await Amperfy.App.Library.Dialogs.AddToPlaylistDialog.ShowAsync(account, songs);
+    }
+
+    /// Context menu of the currently playing item (Swift MiniPlayerView: the entity menu of the current item).
+    public static MenuFlyout CreateCurrentItemFlyout() => Amperfy.App.Library.EntityActions.CreateMenuFlyout(() =>
+        Player.CurrentlyPlaying is { } playable
+            ? (playable, new Amperfy.App.Library.EntityActionOptions { Changed = NotifyUiStateChanged })
+            : null);
 
     private static MenuFlyoutItem MenuItem(string text, string glyph, Action action)
     {

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Amperfy.App.Helpers;
+using Amperfy.App.Library;
 using Amperfy.App.Services;
 using Amperfy.App.Services.Player;
 using Amperfy.Core.Common;
@@ -40,7 +41,7 @@ public sealed class QueueRow
 /// The player queue (port of QueueVC / the PopupPlayer table): sections "Previous", the currently playing item,
 /// "Next in Queue" (user queue) and "Next" (context queue; the podcast queue in podcast mode).
 /// Double click / Enter plays an item, Delete removes it, drag &amp; drop reorders (<see cref="IPlayerFacade.MovePlayable"/>),
-/// right click opens the context menu.
+/// right click opens the shared entity context menu (<see cref="EntityActions"/>) with the queue actions.
 public sealed partial class QueueView : UserControl
 {
     private const string TemplateXaml =
@@ -549,47 +550,47 @@ public sealed partial class QueueView : UserControl
     private void List_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
     {
         if (RowOf(args.OriginalSource) is not { Kind: not QueueRowKind.Header } row || row.Playable is not { } playable) return;
-        var flyout = new MenuFlyout();
-        var player = PlayerUi.Player;
-        if (row.Kind == QueueRowKind.Item)
-        {
-            flyout.Items.Add(MenuItem("Play", Icons.Play, () => Play(row)));
-        }
-        if (playable.IsSong && player.PlayerMode == PlayerMode.Music)
-        {
-            flyout.Items.Add(MenuItem("Play Next", PlayerGlyphs.PlayNext, () =>
-            {
-                player.InsertUserQueue([playable]);
-                PlayerUi.NotifyQueueModified();
-            }));
-            flyout.Items.Add(MenuItem("Add to Queue", PlayerGlyphs.AddToQueue, () =>
-            {
-                player.AppendUserQueue([playable]);
-                PlayerUi.NotifyQueueModified();
-            }));
-        }
-        if (row.Kind == QueueRowKind.Item)
-        {
-            flyout.Items.Add(MenuItem("Remove from Queue", Icons.Delete, () => Remove(row)));
-        }
-        var navigation = new List<MenuFlyoutItemBase>();
-        if (playable.AsSong?.Album is not null) navigation.Add(MenuItem("Show Album", Icons.Album, () => PlayerUi.ShowAlbum(playable)));
-        if (playable.AsSong?.Artist is not null) navigation.Add(MenuItem("Show Artist", Icons.Artist, () => PlayerUi.ShowArtist(playable)));
-        if (playable.AsPodcastEpisode?.Podcast is not null) navigation.Add(MenuItem("Show Podcast", Icons.Podcast, () => PlayerUi.ShowAlbum(playable)));
-        if (playable.IsFavoritable && !AppServices.Instance.Settings.User.IsOfflineMode)
-        {
-            navigation.Add(MenuItem(playable.IsFavorite ? "Unmark Favorite" : "Mark as Favorite",
-                playable.IsFavorite ? Icons.HeartFill : Icons.Heart, () => _ = PlayerUi.ToggleFavoriteAsync(playable)));
-        }
-        if (navigation.Count > 0)
-        {
-            if (flyout.Items.Count > 0) flyout.Items.Add(new MenuFlyoutSeparator());
-            foreach (var item in navigation) flyout.Items.Add(item);
-        }
-        if (flyout.Items.Count == 0) return;
+        var flyout = CreateContextFlyout(row, playable);
         if (args.TryGetPosition(_list, out var point)) flyout.ShowAt(_list, point);
         else if (args.OriginalSource is FrameworkElement element) flyout.ShowAt(element);
         args.Handled = true;
+    }
+
+    /// The shared entity context menu (Swift: EntityPreviewActionBuilder with playerIndexCb): "Play" jumps to the
+    /// queue entry; queue specific items (play next, add to queue, remove) are appended.
+    private MenuFlyout CreateContextFlyout(QueueRow row, AbstractPlayable playable)
+    {
+        var isItem = row.Kind == QueueRowKind.Item;
+        return EntityActions.CreateMenuFlyout(playable, new EntityActionOptions
+        {
+            PlayerIndex = isItem ? () => row.PlayerIndex : null,
+            Changed = ScheduleRebuild,
+            ExtraItems = () => QueueMenuItems(row, playable),
+        });
+    }
+
+    private static IEnumerable<MenuFlyoutItemBase> QueueMenuItems(QueueRow row, AbstractPlayable playable)
+    {
+        var player = PlayerUi.Player;
+        if (player.PlayerMode == PlayerMode.Music && EntityActions.IsPlayable(playable) && (playable.IsSong || playable.IsRadio))
+        {
+            yield return MenuItem("Play Next", PlayerGlyphs.PlayNext, () =>
+            {
+                player.InsertUserQueue([playable]);
+                PlayerUi.NotifyQueueModified();
+            });
+            yield return MenuItem("Add to Queue", PlayerGlyphs.AddToQueue, () =>
+            {
+                player.AppendUserQueue([playable]);
+                PlayerUi.NotifyQueueModified();
+            });
+        }
+        if (row.Kind == QueueRowKind.Item)
+        {
+            var remove = MenuItem("Remove from Queue", Icons.Delete, () => Remove(row));
+            remove.KeyboardAcceleratorTextOverride = "Del";
+            yield return remove;
+        }
     }
 
     private static MenuFlyoutItem MenuItem(string text, string glyph, Action action)

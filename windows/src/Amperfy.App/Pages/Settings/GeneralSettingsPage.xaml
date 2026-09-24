@@ -34,6 +34,9 @@
                 <ComboBox x:Name="ScreenLockCombo" MinWidth="200" />
             </toolkit:SettingsCard>
 
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Keyboard" />
+            <StackPanel x:Name="KeyboardHost" Spacing="4" />
+
             <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="More settings" />
             <StackPanel x:Name="SectionLinksHost" Spacing="4" />
         </StackPanel>

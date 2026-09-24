@@ -58,6 +58,10 @@ public sealed partial class PlayerBar : UserControl
         TitleButton.Click += (_, _) => PlayerUi.ShowAlbum(PlayerUi.Player.CurrentlyPlaying);
         ArtistButton.Click += (_, _) => PlayerUi.ShowArtist(PlayerUi.Player.CurrentlyPlaying);
         Artwork.CornerRadius = new CornerRadius(6);
+        // right click on the current item: its context menu (show album/artist, lyrics, favorite, rating, playlist, …)
+        ArtworkButton.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
+        TitleButton.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
+        ArtistButton.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
 
         _observer.AnyChanged += Refresh;
         _observer.ArtworkChanged += RefreshArtwork;
