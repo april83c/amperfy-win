@@ -151,7 +151,10 @@ public sealed partial class AccountSettingsPage : Page
     {
         if (info == ActiveInfo) return;
         _services.Kit.SwitchActiveAccount(info);
-        // AccountActiveChanged: the shell rebuilds the sidebar, the theme service applies the accent, this page reloads
+        // AccountActiveChanged: the shell rebuilds the sidebar, the theme service applies the accent, this page reloads.
+        // Pages of the previous account must not be reachable with "back".
+        _services.Navigation.Frame?.BackStack.Clear();
+        _services.MainWindow.UpdateBackButton(false);
     }
 
     // --- appearance ----------------------------------------------------------------------------

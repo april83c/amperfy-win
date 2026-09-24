@@ -13,6 +13,12 @@ public static class SettingsBootstrap
         Run("Theme", () => ThemeService.Initialize(services));
         Run("ScreenLockPrevention", () => ScreenLockPreventionService.Initialize(services));
         Run("Notifications", () => ToastNotificationService.Initialize(services));
+        // streaming settings distinguish unmetered and metered networks ("WiFi"/"Cellular" on iOS)
+        Run("MeteredNetwork", () =>
+        {
+            if (services.Kit.NetworkMonitor is NetworkMonitor { IsMeteredProvider: null } monitor)
+                monitor.IsMeteredProvider = MeteredConnectionDetector.IsMetered;
+        });
         // the playable cache size is tracked incrementally; compute the start value (used for the cache limit)
         var fileManager = CacheFileManager.Shared;
         _ = Task.Run(() => Run("CacheSize", fileManager.RecalculatePlayableCacheSizes));
