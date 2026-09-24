@@ -29,6 +29,33 @@ public sealed partial class SupportSettingsPage : Page
         LogFolderCard.Description = logFolder;
         OpenLogFolderButton.Click += (_, _) => SettingsUi.OpenFolder(logFolder);
         Loaded += (_, _) => Reload();
+        FillUrlCommands();
+    }
+
+    /// Documentation of the amperfy:// automation URLs (port of the iOS X-Callback-URL documentation view).
+    private void FillUrlCommands()
+    {
+        try
+        {
+            foreach (var docu in SystemIntegration.UrlCommandDocumentation)
+            {
+                var lines = new List<string> { docu.Description };
+                foreach (var p in docu.Parameters)
+                {
+                    var mandatory = p.IsMandatory ? "mandatory" : $"optional, default: {p.DefaultIfNotGiven ?? "-"}";
+                    lines.Add($"• {p.Name} ({p.Type}, {mandatory}): {p.Description}");
+                }
+                lines.AddRange(docu.ExampleUrls);
+                var copy = new Button { Content = "Copy example" };
+                var example = docu.ExampleUrls.FirstOrDefault() ?? "";
+                copy.Click += (_, _) => SettingsUi.CopyToClipboard(example);
+                UrlCommandsExpander.Items.Add(SettingsUi.Card(docu.Name, string.Join("\n", lines), content: copy));
+            }
+        }
+        catch (Exception ex)
+        {
+            AmperfyLog.Warning("Support", $"URL command documentation: {ex.Message}");
+        }
     }
 
     private void Reload()

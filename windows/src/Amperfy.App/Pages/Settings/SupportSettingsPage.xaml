@@ -44,6 +44,16 @@
                 <Button x:Name="OpenLogFolderButton" Content="Open folder" />
             </toolkit:SettingsCard>
 
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Automation" />
+            <toolkit:SettingsExpander
+                x:Name="UrlCommandsExpander"
+                Header="X-Callback-URLs"
+                Description="Control Amperfy from scripts, shortcuts or other apps with amperfy:// URLs (e.g. start amperfy://x-callback-url/togglePlayPause). Supports x-success and x-error callbacks.">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE71B;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+            </toolkit:SettingsExpander>
+
             <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Usage" />
             <toolkit:SettingsExpander x:Name="StatisticsExpander" Header="Usage Statistics" Description="Collected during this session. They stay on this device.">
                 <toolkit:SettingsExpander.HeaderIcon>
