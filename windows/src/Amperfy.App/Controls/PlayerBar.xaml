@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Amperfy.App.Controls.PlayerBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Amperfy.App.Controls">
+    <Grid
+        x:Name="RootGrid"
+        MinHeight="92"
+        Padding="12,8,12,8"
+        ColumnSpacing="16"
+        BorderThickness="0,1,0,0"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        Background="{ThemeResource LayerFillColorDefaultBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" MinWidth="200" />
+            <ColumnDefinition Width="4*" MinWidth="280" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- currently playing: artwork, title, artist, favorite -->
+        <Grid Grid.Column="0" ColumnSpacing="12" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button
+                x:Name="ArtworkButton"
+                Padding="0"
+                BorderThickness="0"
+                CornerRadius="6"
+                Background="Transparent">
+                <controls:ArtworkImage x:Name="Artwork" Width="64" Height="64" DecodeSize="128" />
+            </Button>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <HyperlinkButton x:Name="TitleButton" Padding="0" MinHeight="0" HorizontalAlignment="Left">
+                    <TextBlock
+                        x:Name="TitleText"
+                        FontWeight="SemiBold"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                </HyperlinkButton>
+                <HyperlinkButton x:Name="ArtistButton" Padding="0" MinHeight="0" HorizontalAlignment="Left">
+                    <TextBlock
+                        x:Name="ArtistText"
+                        FontSize="12"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </HyperlinkButton>
+                <TextBlock
+                    x:Name="AlbumText"
+                    FontSize="12"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </StackPanel>
+            <Border x:Name="FavoriteHost" Grid.Column="2" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- transport controls + seek bar (created in code) -->
+        <Border x:Name="TransportHost" Grid.Column="1" VerticalAlignment="Center" />
+
+        <!-- rate, sleep timer, mode, lyrics, queue, volume, mini player, now playing, more (created in code) -->
+        <StackPanel
+            x:Name="ExtrasPanel"
+            Grid.Column="2"
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Spacing="2" />
+    </Grid>
+</UserControl>

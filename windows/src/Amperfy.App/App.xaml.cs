@@ -28,6 +28,7 @@ public partial class App : Application
         }
         _window = new MainWindow();
         services.MainWindow = _window;
+        Services.Player.PlayerUiService.Initialize(_window);
         _window.Closed += (_, _) => services.Shutdown();
         _window.Activate();
         CrashLog.Write("Window activated");
