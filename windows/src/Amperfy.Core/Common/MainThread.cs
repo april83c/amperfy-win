@@ -4,14 +4,25 @@ namespace Amperfy.Core.Common;
 /// app). Background work (network, file I/O, timers) posts back here.
 public static class MainThread
 {
-    private static SynchronizationContext? _context;
-    private static int _threadId = -1;
+    private static SynchronizationContext? _staticContext;
+    private static int _staticThreadId = -1;
 
+    // Per async-flow override (used by tests running in parallel, each with its own "main thread").
+    private static readonly AsyncLocal<(SynchronizationContext Context, int ThreadId)?> FlowOverride = new();
+
+    private static SynchronizationContext? _context => FlowOverride.Value?.Context ?? _staticContext;
+    private static int _threadId => FlowOverride.Value?.ThreadId ?? _staticThreadId;
+
+    /// Sets the process wide main thread context (app startup on the UI thread).
     public static void Initialize(SynchronizationContext context)
     {
-        _context = context;
-        _threadId = Environment.CurrentManagedThreadId;
+        _staticContext = context;
+        _staticThreadId = Environment.CurrentManagedThreadId;
     }
+
+    /// Sets the main thread context for the current async flow only (tests).
+    public static void InitializeForCurrentFlow(SynchronizationContext context) =>
+        FlowOverride.Value = (context, Environment.CurrentManagedThreadId);
 
     public static bool IsInitialized => _context is not null;
 
@@ -110,7 +121,7 @@ public sealed class SingleThreadSynchronizationContext : SynchronizationContext,
         SetSynchronizationContext(context);
         try
         {
-            MainThread.Initialize(context);
+            MainThread.InitializeForCurrentFlow(context);
             var task = func();
             context.RunUntilComplete(task);
             task.GetAwaiter().GetResult();
