@@ -84,7 +84,8 @@ public class ServerIntegrationTest(ITestOutputHelper output)
             downloads.Start();
             var songToCache = album.Songs[1];
             downloads.Download(songToCache);
-            for (var i = 0; i < 100 && !songToCache.IsCached; i++) await Task.Delay(100);
+            // the embedded artwork is extracted right after the file is marked cached
+            for (var i = 0; i < 100 && (!songToCache.IsCached || songToCache.EmbeddedArtwork is null); i++) await Task.Delay(100);
             library.SaveContext();
             output.WriteLine($"Cached: {songToCache.RelFilePath}, embedded artwork: {songToCache.EmbeddedArtwork?.RelFilePath}");
             Assert.True(songToCache.IsCached);
