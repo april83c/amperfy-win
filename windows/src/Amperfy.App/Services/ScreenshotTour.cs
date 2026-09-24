@@ -27,11 +27,16 @@ public sealed class ScreenshotTour
         return new ScreenshotTour(args[idx + 1]);
     }
 
+    private readonly List<Func<IEnumerable<(string Name, Func<Task> Action)>>> _dynamicSteps = [];
+
     public void AddStep(string name, Func<Task> action) => _steps.Add((name, action));
+
+    /// Steps built after the static steps ran (e.g. depending on the synced library).
+    public void AddDynamicSteps(Func<IEnumerable<(string Name, Func<Task> Action)>> factory) => _dynamicSteps.Add(factory);
 
     public async Task RunAsync(Window window, Action? onFinished = null)
     {
-        foreach (var (name, action) in _steps)
+        foreach (var (name, action) in _steps.Concat(_dynamicSteps.SelectMany(f => f())))
         {
             try
             {

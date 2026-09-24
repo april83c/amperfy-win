@@ -42,7 +42,29 @@ jobs:
       - name: Smoke test (launch + screenshot)
         shell: pwsh
         run: ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
+      - name: Start Navidrome with the test library
+        shell: pwsh
+        run: ./windows/scripts/start-navidrome.ps1 -MusicDir windows/tests/TestLibrary -WorkDir out/navidrome
+      - name: E2E screenshot tour (login, sync, all pages)
+        shell: pwsh
+        env:
+          AMPERFY_DATA_DIR: ${{ github.workspace }}\out\e2e-data
+          AMPERFY_E2E_SERVER: http://127.0.0.1:4533
+          AMPERFY_E2E_USER: admin
+          AMPERFY_E2E_PASSWORD: amperfy-test
+        run: ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/tour -Arguments "--screenshot-tour `"${{ github.workspace }}\out\tour`"" -ExitTimeoutSeconds 600
+      - name: Upload tour results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tour-results
+          path: |
+            out/tour
+            out/navidrome/*.log*
+            out/e2e-data/logs
+          retention-days: 7
       - name: Upload app
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Amperfy-win-x64

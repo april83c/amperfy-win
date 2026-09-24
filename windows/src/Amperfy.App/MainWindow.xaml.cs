@@ -25,6 +25,7 @@ public sealed partial class MainWindow : Window
         {
             _services.Dialogs.Attach(RootGrid.XamlRoot);
             ShowStartPage();
+            E2ETour.TryStart(this);
         };
     }
 
