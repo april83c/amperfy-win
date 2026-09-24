@@ -250,7 +250,7 @@ public sealed partial class LibraryStorage
         else
         {
             foreach (var s in states) Context.Remove(s);
-            state = new PlayerState();
+            state = Context.CreateProxy<PlayerState>();
             Context.Add(state);
         }
         state.UserQueuePlaylist ??= CreatePlaylist(null);

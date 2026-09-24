@@ -23,7 +23,7 @@ public sealed partial class PlaylistDetailPage : Page
     private readonly AppServices _services = AppServices.Instance;
     private readonly LibraryListContext _context = new() { ShowAlbumInSubtitle = true };
     private readonly LibraryListController _controller;
-    private readonly ObservableCollection<object> _items = [];
+    private ObservableCollection<object> _items = [];
     private readonly Button _editButton;
     private readonly Button _doneButton;
     private readonly Button _addButton;
@@ -131,18 +131,36 @@ public sealed partial class PlaylistDetailPage : Page
         return new PlayContext(playlist, index, playables);
     }
 
-    private void Reload()
+    private void Reload() => Reload(keepIfUnchanged: false);
+
+    private List<AbstractPlayable?> _shownPlayables = [];
+
+    private void Reload(bool keepIfUnchanged)
     {
         if (_playlist is not { } playlist) return;
         var onlyCached = Toolbar.OnlyCached && !_isEditing;
-        _items.Clear();
-        var index = 0;
-        foreach (var item in playlist.Items)
+        // items, songs, albums, artists and artworks in a few batch queries (not one per row)
+        try { _services.Library.LoadPlaylistItems(playlist); }
+        catch (Exception ex) { Amperfy.Core.Common.AmperfyLog.Error("PlaylistDetail", $"Loading items failed: {ex.Message}"); }
+        var entities = playlist.Items.Where(i => i.Playable is { } p && (!onlyCached || p.IsCached)).ToList();
+        // unchanged (e.g. after a sync without changes): keep the list (no rebuild of all rows)
+        var playables = entities.Select(i => i.Playable).ToList();
+        if (keepIfUnchanged && _items.Count == entities.Count && _shownPlayables.SequenceEqual(playables) &&
+            _items.OfType<LibraryItem>().Select(i => i.Entity).SequenceEqual(entities))
         {
-            if (item.Playable is not { } playable) continue;
-            if (onlyCached && !playable.IsCached) continue;
-            _items.Add(new LibraryItem(item, _context, index++));
+            UpdateEmptyText(onlyCached);
+            return;
         }
+        var index = 0;
+        // one reset instead of one change notification per item
+        _items = new ObservableCollection<object>(entities.Select(item => (object)new LibraryItem(item, _context, index++)));
+        _shownPlayables = playables;
+        ItemsList.ItemsSource = _items;
+        UpdateEmptyText(onlyCached);
+    }
+
+    private void UpdateEmptyText(bool onlyCached)
+    {
         EmptyText.Text = onlyCached ? "No cached songs" : "No songs";
         EmptyText.Visibility = _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -285,6 +303,6 @@ public sealed partial class PlaylistDetailPage : Page
         Header.IsBusy = false;
         if (_playlist != playlist || _isEditing) return;
         Header.Refresh();
-        Reload();
+        Reload(keepIfUnchanged: true);
     }
 }

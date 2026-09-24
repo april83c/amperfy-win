@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
@@ -6,22 +7,22 @@ public class Album : AbstractLibraryEntity, IPlayableContainable
 {
     public const string OrphanedName = "Unknown (Orphaned)";
 
-    public long DurationRaw { get; set; }
-    public bool IsCached { get; set; }
-    public bool IsSongsMetaDataSynced { get; set; }
-    public string? NameRaw { get; set; }
-    public int NewestIndex { get; set; }
-    public int RecentIndex { get; set; }
-    public long RemoteDurationRaw { get; set; }
-    public int RemoteSongCount { get; set; }
-    public int SongCountRaw { get; set; }
-    public int Year { get; set; }
+    public virtual long DurationRaw { get; set; }
+    public virtual bool IsCached { get; set; }
+    public virtual bool IsSongsMetaDataSynced { get; set; }
+    public virtual string? NameRaw { get; set; }
+    public virtual int NewestIndex { get; set; }
+    public virtual int RecentIndex { get; set; }
+    public virtual long RemoteDurationRaw { get; set; }
+    public virtual int RemoteSongCount { get; set; }
+    public virtual int SongCountRaw { get; set; }
+    public virtual int Year { get; set; }
 
-    public int? ArtistPk { get; set; }
+    public virtual int? ArtistPk { get; set; }
     public virtual Artist? Artist { get; set; }
-    public int? GenrePk { get; set; }
+    public virtual int? GenrePk { get; set; }
     public virtual Genre? Genre { get; set; }
-    public virtual ICollection<Song> SongsRaw { get; set; } = new HashSet<Song>();
+    public virtual ICollection<Song> SongsRaw { get; set; } = new ObservableHashSet<Song>();
 
     protected Album() { }
 

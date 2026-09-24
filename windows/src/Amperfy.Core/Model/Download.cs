@@ -4,22 +4,22 @@ namespace Amperfy.Core.Model;
 
 public class Download
 {
-    public int Pk { get; set; }
-    public DateTime? CreationDate { get; set; } = DateTime.UtcNow;
-    public DateTime? ErrorDate { get; set; }
-    public int ErrorTypeRaw { get; set; }
-    public DateTime? FinishDate { get; set; }
-    public string Id { get; set; } = "";
-    public float Progress { get; set; }
-    public DateTime? StartDate { get; set; }
-    public string? TotalSizeRaw { get; set; }
-    public string UrlString { get; set; } = "";
+    public virtual int Pk { get; set; }
+    public virtual DateTime? CreationDate { get; set; } = DateTime.UtcNow;
+    public virtual DateTime? ErrorDate { get; set; }
+    public virtual int ErrorTypeRaw { get; set; }
+    public virtual DateTime? FinishDate { get; set; }
+    public virtual string Id { get; set; } = "";
+    public virtual float Progress { get; set; }
+    public virtual DateTime? StartDate { get; set; }
+    public virtual string? TotalSizeRaw { get; set; }
+    public virtual string UrlString { get; set; } = "";
 
-    public int? AccountPk { get; set; }
+    public virtual int? AccountPk { get; set; }
     public virtual Account? Account { get; set; }
-    public int? ArtworkPk { get; set; }
+    public virtual int? ArtworkPk { get; set; }
     public virtual Artwork? Artwork { get; set; }
-    public int? PlayablePk { get; set; }
+    public virtual int? PlayablePk { get; set; }
     public virtual AbstractPlayable? Playable { get; set; }
 
     public Download() { }

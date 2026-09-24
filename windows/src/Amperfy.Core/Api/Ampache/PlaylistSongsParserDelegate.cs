@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 namespace Amperfy.Core.Api.Ampache;
 
 /// Parses the songs of a playlist and updates the playlist items in place.
@@ -70,12 +71,10 @@ public sealed class PlaylistSongsParserDelegate : SongParserDelegate
     {
         var items = Playlist.Items;
         var lastOrder = items.Count > 0 ? items[^1].Order : Playlist.ItemsRaw.Count;
-        var item = new PlaylistItem
-        {
-            Playable = song,
-            Account = Playlist.Account ?? song.Account,
-            Order = lastOrder + PlaylistItem.OrderDistance,
-        };
+        var item = Library.Context.CreateProxy<PlaylistItem>();
+        item.Playable = song;
+        item.Account = Playlist.Account ?? song.Account;
+        item.Order = lastOrder + PlaylistItem.OrderDistance;
         Playlist.Add(item);
     }
 }

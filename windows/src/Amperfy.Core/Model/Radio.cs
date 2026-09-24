@@ -4,7 +4,7 @@ namespace Amperfy.Core.Model;
 
 public class Radio : AbstractPlayable
 {
-    public string? SiteUrl { get; set; }
+    public virtual string? SiteUrl { get; set; }
 
     protected Radio() { }
 

@@ -4,18 +4,18 @@ namespace Amperfy.Core.Model;
 
 public class Song : AbstractPlayable
 {
-    public DateTime? AddedDate { get; set; }
-    public string? LyricsRelFilePath { get; set; }
+    public virtual DateTime? AddedDate { get; set; }
+    public virtual string? LyricsRelFilePath { get; set; }
 
-    public int? AlbumPk { get; set; }
+    public virtual int? AlbumPk { get; set; }
     public virtual Album? Album { get; set; }
-    public int? ArtistPk { get; set; }
+    public virtual int? ArtistPk { get; set; }
     public virtual Artist? Artist { get; set; }
-    public int? DirectoryPk { get; set; }
+    public virtual int? DirectoryPk { get; set; }
     public virtual MusicDirectory? Directory { get; set; }
-    public int? GenrePk { get; set; }
+    public virtual int? GenrePk { get; set; }
     public virtual Genre? Genre { get; set; }
-    public int? MusicFolderPk { get; set; }
+    public virtual int? MusicFolderPk { get; set; }
     public virtual MusicFolder? MusicFolder { get; set; }
 
     protected Song() { }

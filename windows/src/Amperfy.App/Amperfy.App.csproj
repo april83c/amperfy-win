@@ -12,8 +12,10 @@
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- The Windows App SDK is bundled (no separate runtime install); .NET is framework-dependent
+         (requires the .NET 10 Runtime, keeps the download small) -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <SelfContained>true</SelfContained>
+    <SelfContained>false</SelfContained>
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- Custom Program.Main (single instance) -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>

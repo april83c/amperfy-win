@@ -41,7 +41,9 @@ implementation. `docs/PORTING.md` explains why the port uses C# rather than Swif
 Not ported, because Windows has no equivalent: CarPlay, Siri/App Intents, Apple Watch, haptics and swipe gestures. Context menus and keyboard shortcuts replace the swipe gestures.
 
 ## Install
-Download `Amperfy-win-x64.zip` or `Amperfy-win-arm64.zip` from a release, or from the `Amperfy-win-x64` artifact of a CI run. Unzip it and start `Amperfy.exe`. It is self-contained and needs no installer or .NET runtime. Requires Windows 10 version 2004 (build 19041) or later, or Windows 11.
+Download `Amperfy-win-x64.zip` or `Amperfy-win-arm64.zip` from a release, or the `Amperfy-win-x64` / `Amperfy-win-arm64` artifact of a CI run. Unzip it and start `Amperfy.exe`; no installer is needed.
+- Requires the [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) for the matching architecture (x64 or Arm64). If it's missing, Windows shows a prompt with a download link. The Windows App SDK is bundled with the app.
+- Requires Windows 10 version 2004 (build 19041) or later, or Windows 11.
 
 Data is stored in `%LOCALAPPDATA%\Amperfy`: the database, settings, cache and `logs\amperfy.log`. Passwords are encrypted with DPAPI for the current Windows user.
 

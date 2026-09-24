@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 using Amperfy.Core.Downloads;
 
@@ -5,29 +6,29 @@ namespace Amperfy.Core.Model;
 
 public abstract class AbstractPlayable : AbstractLibraryEntity, IDownloadable, IPlayableContainable
 {
-    public int Bitrate { get; set; } // byte per second
-    public int CombinedDuration { get; set; }
-    public string? ContentType { get; set; }
-    public string? ContentTypeTranscoded { get; set; }
-    public string? Disk { get; set; }
-    public int PlayDurationRaw { get; set; }
-    public int PlayProgress { get; set; }
-    public string? RelFilePath { get; set; }
-    public int RemoteDurationRaw { get; set; }
-    public float ReplayGainAlbumGain { get; set; }
-    public float ReplayGainAlbumPeak { get; set; }
-    public float ReplayGainTrackGain { get; set; }
-    public float ReplayGainTrackPeak { get; set; }
-    public long Size { get; set; }
-    public string? TitleRaw { get; set; }
-    public int Track { get; set; }
-    public string? Url { get; set; }
-    public int Year { get; set; }
+    public virtual int Bitrate { get; set; } // byte per second
+    public virtual int CombinedDuration { get; set; }
+    public virtual string? ContentType { get; set; }
+    public virtual string? ContentTypeTranscoded { get; set; }
+    public virtual string? Disk { get; set; }
+    public virtual int PlayDurationRaw { get; set; }
+    public virtual int PlayProgress { get; set; }
+    public virtual string? RelFilePath { get; set; }
+    public virtual int RemoteDurationRaw { get; set; }
+    public virtual float ReplayGainAlbumGain { get; set; }
+    public virtual float ReplayGainAlbumPeak { get; set; }
+    public virtual float ReplayGainTrackGain { get; set; }
+    public virtual float ReplayGainTrackPeak { get; set; }
+    public virtual long Size { get; set; }
+    public virtual string? TitleRaw { get; set; }
+    public virtual int Track { get; set; }
+    public virtual string? Url { get; set; }
+    public virtual int Year { get; set; }
 
     public virtual Download? Download { get; set; }
     public virtual EmbeddedArtwork? EmbeddedArtwork { get; set; }
-    public virtual ICollection<PlaylistItem> PlaylistItems { get; set; } = new HashSet<PlaylistItem>();
-    public virtual ICollection<ScrobbleEntry> ScrobbleEntries { get; set; } = new HashSet<ScrobbleEntry>();
+    public virtual ICollection<PlaylistItem> PlaylistItems { get; set; } = new ObservableHashSet<PlaylistItem>();
+    public virtual ICollection<ScrobbleEntry> ScrobbleEntries { get; set; } = new ObservableHashSet<ScrobbleEntry>();
 
     protected AbstractPlayable() { }
 

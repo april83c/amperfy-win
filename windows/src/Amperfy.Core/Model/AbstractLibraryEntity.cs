@@ -4,14 +4,14 @@ namespace Amperfy.Core.Model;
 /// Instances must be created through LibraryStorage (lazy loading proxies).
 public abstract class AbstractLibraryEntity
 {
-    public int Pk { get; set; }
+    public virtual int Pk { get; set; }
 
     /// Remote (server) id
-    public string Id { get; set; } = "";
-    public string AlphabeticSectionInitial { get; set; } = "?";
-    public bool IsFavorite { get; set; }
-    public DateTime? LastPlayedDate { get; set; }
-    public int PlayCount { get; set; }
+    public virtual string Id { get; set; } = "";
+    public virtual string AlphabeticSectionInitial { get; set; } = "?";
+    public virtual bool IsFavorite { get; set; }
+    public virtual DateTime? LastPlayedDate { get; set; }
+    public virtual int PlayCount { get; set; }
 
     private int _rating;
     public int Rating
@@ -20,13 +20,13 @@ public abstract class AbstractLibraryEntity
         set { if (value is >= 0 and <= 5) _rating = value; }
     }
 
-    public RemoteStatus RemoteStatus { get; set; } = RemoteStatus.Available;
-    public DateTime? StarredDate { get; set; }
+    public virtual RemoteStatus RemoteStatus { get; set; } = RemoteStatus.Available;
+    public virtual DateTime? StarredDate { get; set; }
 
-    public int? AccountPk { get; set; }
+    public virtual int? AccountPk { get; set; }
     public virtual Account? Account { get; set; }
 
-    public int? ArtworkPk { get; set; }
+    public virtual int? ArtworkPk { get; set; }
     public virtual Artwork? Artwork { get; set; }
 
     public virtual SearchHistoryItem? SearchHistory { get; set; }

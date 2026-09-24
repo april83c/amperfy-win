@@ -1,6 +1,6 @@
 name: Windows release
 
-# Builds self-contained x64 and ARM64 packages (zip) and attaches them to a GitHub release.
+# Builds x64 and ARM64 packages (zip, framework-dependent: needs the .NET 10 Runtime) and attaches them to a GitHub release.
 on:
   workflow_dispatch:
     inputs:
@@ -52,4 +52,4 @@ jobs:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           gh release create "$TAG" dist/*.zip --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "Amperfy for Windows $TAG" --notes "Self-contained build. Unzip and run Amperfy.exe (Windows 10 version 2004 or later, Windows 11)."
+            --title "Amperfy for Windows $TAG" --notes "Unzip and run Amperfy.exe. Requires the .NET 10 Runtime (https://dotnet.microsoft.com/download/dotnet/10.0, x64 or Arm64 matching the zip) and Windows 10 version 2004 or later / Windows 11."

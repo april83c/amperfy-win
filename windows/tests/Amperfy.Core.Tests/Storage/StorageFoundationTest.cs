@@ -31,6 +31,39 @@ public class StorageFoundationTest : IDisposable
     }
 
     [Fact]
+    public void MovingSongToAnotherAlbum_UpdatesCountsOfBothAlbums()
+    {
+        var album1 = Library.CreateAlbum(Account);
+        album1.Id = "al1";
+        var album2 = Library.CreateAlbum(Account);
+        album2.Id = "al2";
+        var song = CreateSong("s1", "Song", album1);
+        CreateSong("s2", "Other", album1);
+        Library.SaveContext();
+        Assert.Equal(2, album1.SongCountRaw);
+        Assert.Equal(0, album2.SongCountRaw);
+
+        // reads the original album (foreign key original value) during save
+        song.Album = album2;
+        Library.SaveContext();
+        Assert.False(Library.Context.ChangeTracker.HasChanges());
+        Assert.Equal(1, album1.SongCountRaw);
+        Assert.Equal(1, album2.SongCountRaw);
+        Assert.Same(album2, Library.Context.Songs.Single(s => s.Id == "s1").Album);
+    }
+
+    [Fact]
+    public void ChangesAreTrackedWithoutSnapshotComparison()
+    {
+        var song = CreateSong("s1", "Song");
+        Library.SaveContext();
+        Library.Context.ChangeTracker.AutoDetectChangesEnabled = false;
+        song.Title = "Renamed";
+        Assert.Equal(EntityState.Modified, Library.Context.Entry(song).State);
+        Library.Context.ChangeTracker.AutoDetectChangesEnabled = true;
+    }
+
+    [Fact]
     public void SongAlbumRelationshipAndCounts()
     {
         var album = Library.CreateAlbum(Account);

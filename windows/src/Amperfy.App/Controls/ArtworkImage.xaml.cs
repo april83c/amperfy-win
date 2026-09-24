@@ -99,6 +99,9 @@ public sealed partial class ArtworkImage : UserControl
             if (collection.QuadImageEntity is { Count: >= 4 } quad)
             {
                 var uris = quad.Take(4).Select(e => ImageUri(e, display) ?? ThemeHelper.DefaultArtworkUri(e.DefaultArtworkType, theme, ActualTheme)).ToList();
+                var key = string.Join("|", uris) + "|" + decode;
+                if (key == _shownKey) return;
+                _shownKey = key;
                 QuadGrid.Visibility = Visibility.Visible;
                 SingleImage.Visibility = Visibility.Collapsed;
                 Image[] targets = [Quad0, Quad1, Quad2, Quad3];
@@ -121,8 +124,14 @@ public sealed partial class ArtworkImage : UserControl
         return path is not null && File.Exists(path) ? new Uri(path) : null;
     }
 
+    // image(s) currently shown: a refresh with the same source doesn't decode the image again
+    private string? _shownKey;
+
     private void ShowSingle(Uri uri, int decode)
     {
+        var key = uri + "|" + decode;
+        if (key == _shownKey) return;
+        _shownKey = key;
         QuadGrid.Visibility = Visibility.Collapsed;
         SingleImage.Visibility = Visibility.Visible;
         SingleImage.Source = CreateBitmap(uri, decode);

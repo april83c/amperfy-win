@@ -15,6 +15,10 @@ public sealed class AmperfyDbContext : DbContext
         _connectionString = connectionString;
         _connection = openConnection;
         SavingChanges += (_, _) => UpdateDenormalizedCounts();
+        ChangeTracker.Tracked += (_, e) =>
+        {
+            if (e.Entry.Entity is Playlist playlist) playlist.ItemFactory ??= () => this.CreateProxy<PlaylistItem>();
+        };
     }
 
     public DbSet<Account> Accounts => Set<Account>();
@@ -45,6 +49,9 @@ public sealed class AmperfyDbContext : DbContext
         else optionsBuilder.UseSqlite(_connectionString);
         optionsBuilder
             .UseLazyLoadingProxies()
+            // entities notify their changes: DetectChanges doesn't have to compare snapshots of the
+            // whole tracked library on every save (a large library made every save take seconds)
+            .UseChangeTrackingProxies()
             .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
     }
 
@@ -58,6 +65,9 @@ public sealed class AmperfyDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        // change-tracking proxies, but keep the original values (count updates and the save error
+        // recovery need them)
+        b.HasChangeTrackingStrategy(ChangeTrackingStrategy.ChangingAndChangedNotificationsWithOriginalValues);
         // Computed (getter-only) properties are never mapped; EF would otherwise discover
         // computed collections like Album.Songs as navigations.
         foreach (var type in EntityTypes)

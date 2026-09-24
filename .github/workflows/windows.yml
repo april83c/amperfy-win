@@ -48,23 +48,39 @@ jobs:
         run: docker logs navidrome | tail -100
 
   app:
+    # x64 is built, launched and tested; arm64 is cross-compiled on the x64 runner (build only)
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            platform: x64
+          - arch: arm64
+            platform: ARM64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Publish app (x64)
-        run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 -p:Platform=x64 -o out/Amperfy-win-x64
+      - name: Publish app (${{ matrix.arch }})
+        run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.platform }} -o out/Amperfy-win-${{ matrix.arch }}
       - name: List published files
         shell: pwsh
-        run: Get-ChildItem out/Amperfy-win-x64 -Recurse -File | Where-Object { $_.Extension -in '.pri','.xbf' -or $_.Name -like 'Amperfy*' } | Format-Table FullName, Length -AutoSize
+        run: |
+          Get-ChildItem out/Amperfy-win-${{ matrix.arch }} -Recurse -File | Where-Object { $_.Extension -in '.pri','.xbf' -or $_.Name -like 'Amperfy*' } | Format-Table FullName, Length -AutoSize
+          Get-Content out/Amperfy-win-${{ matrix.arch }}/Amperfy.runtimeconfig.json
+          $size = (Get-ChildItem out/Amperfy-win-${{ matrix.arch }} -Recurse -File | Measure-Object Length -Sum).Sum / 1MB
+          Write-Host ("Total size: {0:N1} MB" -f $size)
       - name: Smoke test (launch + screenshot)
+        if: matrix.arch == 'x64'
         shell: pwsh
         run: ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
       - name: Install a virtual audio device (the runner has none; needed for playback)
+        if: matrix.arch == 'x64'
         uses: LABSN/sound-ci-helpers@v1
       - name: E2E screenshot tour against Navidrome (login, sync, all pages)
+        if: matrix.arch == 'x64'
         shell: pwsh
         env:
           AMPERFY_DATA_DIR: ${{ github.workspace }}\out\e2e-data
@@ -76,7 +92,7 @@ jobs:
           ./windows/scripts/start-navidrome.ps1 -MusicDir windows/tests/TestLibrary -WorkDir out/navidrome
           ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/tour -Arguments "--screenshot-tour `"${{ github.workspace }}\out\tour`"" -ExitTimeoutSeconds 600
       - name: Upload tour results
-        if: always()
+        if: always() && matrix.arch == 'x64'
         uses: actions/upload-artifact@v4
         with:
           name: tour-results
@@ -89,11 +105,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Amperfy-win-x64
-          path: out/Amperfy-win-x64
+          name: Amperfy-win-${{ matrix.arch }}
+          path: out/Amperfy-win-${{ matrix.arch }}
           retention-days: 14
       - name: Upload smoke results
-        if: always()
+        if: always() && matrix.arch == 'x64'
         uses: actions/upload-artifact@v4
         with:
           name: smoke-results

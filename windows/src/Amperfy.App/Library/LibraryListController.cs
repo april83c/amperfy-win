@@ -1,3 +1,4 @@
+using Amperfy.App.Services;
 using Amperfy.Core.Model;
 using Amperfy.Core.Player;
 using Microsoft.UI.Input;
@@ -78,7 +79,10 @@ public sealed class LibraryListController
         var items = new IncrementalItems((skip, take) =>
         {
             var index = skip;
-            return loadEntities(skip, take).Select(e => (object)new LibraryItem(e, Context, index++)).ToList();
+            var entities = loadEntities(skip, take).ToList();
+            // one batch query per page instead of lazy loading album/artist/artwork per row
+            LoadDisplayData(entities);
+            return entities.Select(e => (object)new LibraryItem(e, Context, index++)).ToList();
         }, totalCount, pageSize);
         _list.ItemsSource = items;
         return items;
@@ -88,7 +92,9 @@ public sealed class LibraryListController
     public List<object> SetItems(IEnumerable<object> entities)
     {
         var index = 0;
-        var items = entities.Select(e => e is SectionHeaderItem ? e : new LibraryItem(e, Context, index++)).ToList();
+        var entityList = entities.ToList();
+        LoadDisplayData(entityList);
+        var items = entityList.Select(e => e is SectionHeaderItem ? e : new LibraryItem(e, Context, index++)).ToList();
         _list.ItemsSource = items;
         return items;
     }
@@ -170,6 +176,19 @@ public sealed class LibraryListController
             case { } entity:
                 EntityActions.Open(entity);
                 break;
+        }
+    }
+
+    /// Batch loads what the rows display (see LibraryStorage.LoadDisplayData).
+    public static void LoadDisplayData(IEnumerable<object> entities)
+    {
+        try
+        {
+            AppServices.Instance.Library.LoadDisplayData(entities.Where(e => e is not SectionHeaderItem));
+        }
+        catch (Exception ex)
+        {
+            Amperfy.Core.Common.AmperfyLog.Error("LibraryList", $"Loading display data failed: {ex.Message}");
         }
     }
 }

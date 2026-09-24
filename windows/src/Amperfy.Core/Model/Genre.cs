@@ -1,17 +1,18 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
 
 public class Genre : AbstractLibraryEntity, IPlayableContainable
 {
-    public int AlbumCountRaw { get; set; }
-    public int ArtistCountRaw { get; set; }
-    public string NameRaw { get; set; } = "";
-    public int SongCountRaw { get; set; }
+    public virtual int AlbumCountRaw { get; set; }
+    public virtual int ArtistCountRaw { get; set; }
+    public virtual string NameRaw { get; set; } = "";
+    public virtual int SongCountRaw { get; set; }
 
-    public virtual ICollection<Album> AlbumsRaw { get; set; } = new HashSet<Album>();
-    public virtual ICollection<Artist> ArtistsRaw { get; set; } = new HashSet<Artist>();
-    public virtual ICollection<Song> SongsRaw { get; set; } = new HashSet<Song>();
+    public virtual ICollection<Album> AlbumsRaw { get; set; } = new ObservableHashSet<Album>();
+    public virtual ICollection<Artist> ArtistsRaw { get; set; } = new ObservableHashSet<Artist>();
+    public virtual ICollection<Song> SongsRaw { get; set; } = new ObservableHashSet<Song>();
 
     protected Genre() { }
 

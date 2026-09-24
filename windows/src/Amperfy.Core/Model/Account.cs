@@ -2,13 +2,13 @@ namespace Amperfy.Core.Model;
 
 public class Account
 {
-    public int Pk { get; set; }
-    public BackendApiType ApiType { get; set; } = BackendApiType.NotDetected;
-    public string? IdRaw { get; set; }
-    public string? ServerHashRaw { get; set; }
-    public string? ServerUrlRaw { get; set; }
-    public string? UserHashRaw { get; set; }
-    public string? UserNameRaw { get; set; }
+    public virtual int Pk { get; set; }
+    public virtual BackendApiType ApiType { get; set; } = BackendApiType.NotDetected;
+    public virtual string? IdRaw { get; set; }
+    public virtual string? ServerHashRaw { get; set; }
+    public virtual string? ServerUrlRaw { get; set; }
+    public virtual string? UserHashRaw { get; set; }
+    public virtual string? UserNameRaw { get; set; }
 
     protected Account() { }
 

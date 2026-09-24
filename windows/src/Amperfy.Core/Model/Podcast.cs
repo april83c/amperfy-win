@@ -1,15 +1,16 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
 
 public class Podcast : AbstractLibraryEntity, IPlayableContainable
 {
-    public string Depiction { get; set; } = "";
-    public int EpisodeCountRaw { get; set; }
-    public bool IsCached { get; set; }
-    public string TitleRaw { get; set; } = "";
+    public virtual string Depiction { get; set; } = "";
+    public virtual int EpisodeCountRaw { get; set; }
+    public virtual bool IsCached { get; set; }
+    public virtual string TitleRaw { get; set; } = "";
 
-    public virtual ICollection<PodcastEpisode> EpisodesRaw { get; set; } = new HashSet<PodcastEpisode>();
+    public virtual ICollection<PodcastEpisode> EpisodesRaw { get; set; } = new ObservableHashSet<PodcastEpisode>();
 
     /// used by parsers as a temporary buffer
     [NotMapped] public string TitleRawParsed { get; set; } = "";

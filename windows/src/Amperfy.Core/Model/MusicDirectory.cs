@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
@@ -5,17 +6,17 @@ namespace Amperfy.Core.Model;
 /// A directory of the server's file structure (Subsonic "getMusicDirectory").
 public class MusicDirectory : AbstractLibraryEntity, IPlayableContainable
 {
-    public bool IsCached { get; set; }
-    public string? NameRaw { get; set; }
-    public int SongCountRaw { get; set; }
-    public int SubdirectoryCountRaw { get; set; }
+    public virtual bool IsCached { get; set; }
+    public virtual string? NameRaw { get; set; }
+    public virtual int SongCountRaw { get; set; }
+    public virtual int SubdirectoryCountRaw { get; set; }
 
-    public int? MusicFolderPk { get; set; }
+    public virtual int? MusicFolderPk { get; set; }
     public virtual MusicFolder? MusicFolder { get; set; }
-    public int? ParentPk { get; set; }
+    public virtual int? ParentPk { get; set; }
     public virtual MusicDirectory? Parent { get; set; }
-    public virtual ICollection<Song> SongsRaw { get; set; } = new HashSet<Song>();
-    public virtual ICollection<MusicDirectory> SubdirectoriesRaw { get; set; } = new HashSet<MusicDirectory>();
+    public virtual ICollection<Song> SongsRaw { get; set; } = new ObservableHashSet<Song>();
+    public virtual ICollection<MusicDirectory> SubdirectoriesRaw { get; set; } = new ObservableHashSet<MusicDirectory>();
 
     protected MusicDirectory() { }
 

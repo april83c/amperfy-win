@@ -1,19 +1,20 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
 
 public class Artist : AbstractLibraryEntity, IPlayableContainable
 {
-    public int AlbumCountRaw { get; set; }
-    public long DurationRaw { get; set; }
-    public string? NameRaw { get; set; }
-    public int RemoteAlbumCount { get; set; }
-    public int SongCountRaw { get; set; }
+    public virtual int AlbumCountRaw { get; set; }
+    public virtual long DurationRaw { get; set; }
+    public virtual string? NameRaw { get; set; }
+    public virtual int RemoteAlbumCount { get; set; }
+    public virtual int SongCountRaw { get; set; }
 
-    public int? GenrePk { get; set; }
+    public virtual int? GenrePk { get; set; }
     public virtual Genre? Genre { get; set; }
-    public virtual ICollection<Album> AlbumsRaw { get; set; } = new HashSet<Album>();
-    public virtual ICollection<Song> SongsRaw { get; set; } = new HashSet<Song>();
+    public virtual ICollection<Album> AlbumsRaw { get; set; } = new ObservableHashSet<Album>();
+    public virtual ICollection<Song> SongsRaw { get; set; } = new ObservableHashSet<Song>();
 
     protected Artist() { }
 
@@ -35,7 +36,7 @@ public class Artist : AbstractLibraryEntity, IPlayableContainable
     public int AlbumCount => AlbumCountRaw;
     public int Duration => (int)DurationRaw;
 
-    public long RemoteDurationRaw { get; set; }
+    public virtual long RemoteDurationRaw { get; set; }
 
     [NotMapped]
     public int RemoteDuration

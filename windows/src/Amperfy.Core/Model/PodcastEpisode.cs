@@ -4,12 +4,12 @@ namespace Amperfy.Core.Model;
 
 public class PodcastEpisode : AbstractPlayable
 {
-    public string? Depiction { get; set; }
-    public DateTime? PublishDateRaw { get; set; }
-    public PodcastEpisodeRemoteStatus PodcastStatus { get; set; } = PodcastEpisodeRemoteStatus.Undefined;
-    public string? StreamId { get; set; }
+    public virtual string? Depiction { get; set; }
+    public virtual DateTime? PublishDateRaw { get; set; }
+    public virtual PodcastEpisodeRemoteStatus PodcastStatus { get; set; } = PodcastEpisodeRemoteStatus.Undefined;
+    public virtual string? StreamId { get; set; }
 
-    public int? PodcastPk { get; set; }
+    public virtual int? PodcastPk { get; set; }
     public virtual Podcast? Podcast { get; set; }
 
     /// used by parsers as a temporary buffer

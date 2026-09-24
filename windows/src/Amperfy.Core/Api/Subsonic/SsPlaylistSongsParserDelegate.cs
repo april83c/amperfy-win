@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 namespace Amperfy.Core.Api.Subsonic;
 
 /// Parses a playlist with its songs ("getPlaylist" / "createPlaylist") and updates the local
@@ -58,13 +59,11 @@ public class SsPlaylistSongsParserDelegate : SsSongParserDelegate
     {
         var existing = _playlist.Items;
         var lastOrder = existing.Count > 0 ? existing[^1].Order : existing.Count;
-        var item = new PlaylistItem
-        {
-            Playable = playable,
-            Playlist = _playlist,
-            Account = _playlist.Account ?? playable.Account,
-            Order = lastOrder + PlaylistItem.OrderDistance,
-        };
+        var item = Library.Context.CreateProxy<PlaylistItem>();
+        item.Playable = playable;
+        item.Playlist = _playlist;
+        item.Account = _playlist.Account ?? playable.Account;
+        item.Order = lastOrder + PlaylistItem.OrderDistance;
         Library.Context.Add(item);
         _playlist.ItemsRaw.Add(item);
         _playlist.InvalidateItemCache();

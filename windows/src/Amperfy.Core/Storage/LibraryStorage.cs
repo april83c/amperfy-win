@@ -192,7 +192,7 @@ public sealed partial class LibraryStorage
 
     public ScrobbleEntry CreateScrobbleEntry(Account account)
     {
-        var entry = new ScrobbleEntry { Account = account };
+        var entry = Context.CreateProxy<ScrobbleEntry>(); entry.Account = account;
         Context.Add(entry);
         return entry;
     }
@@ -201,14 +201,14 @@ public sealed partial class LibraryStorage
 
     public LogEntry CreateLogEntry()
     {
-        var entry = new LogEntry { CreationDate = DateTime.UtcNow };
+        var entry = Context.CreateProxy<LogEntry>(); entry.CreationDate = DateTime.UtcNow;
         Context.Add(entry);
         return entry;
     }
 
     public EmbeddedArtwork CreateEmbeddedArtwork(Account account)
     {
-        var artwork = new EmbeddedArtwork { Account = account };
+        var artwork = Context.CreateProxy<EmbeddedArtwork>(); artwork.Account = account;
         Context.Add(artwork);
         return artwork;
     }
@@ -227,7 +227,10 @@ public sealed partial class LibraryStorage
 
     public Model.Download CreateDownload(Account account, string id)
     {
-        var download = new Model.Download { Account = account, Id = id, CreationDate = DateTime.UtcNow };
+        var download = Context.CreateProxy<Model.Download>();
+        download.Account = account;
+        download.Id = id;
+        download.CreationDate = DateTime.UtcNow;
         Context.Add(download);
         return download;
     }
@@ -334,7 +337,7 @@ public sealed partial class LibraryStorage
             existing.Date = DateTime.UtcNow;
             return existing;
         }
-        var item = new SearchHistoryItem { Date = DateTime.UtcNow, Account = container.Account };
+        var item = Context.CreateProxy<SearchHistoryItem>(); item.Date = DateTime.UtcNow; item.Account = container.Account;
         item.SearchedPlayableContainable = container;
         Context.Add(item);
         return item;

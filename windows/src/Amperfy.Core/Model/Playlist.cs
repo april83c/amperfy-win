@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Amperfy.Core.Api;
 
 namespace Amperfy.Core.Model;
@@ -7,23 +8,23 @@ public class Playlist : IPlayableContainable
     public const string SmartPlaylistIdPrefix = "smart_";
     public const int ArtworkItemMaxLookCount = 20;
 
-    public int Pk { get; set; }
-    public string Id { get; set; } = "";
-    public string AlphabeticSectionInitial { get; set; } = "?";
-    public DateTime? ChangeDate { get; set; }
-    public long DurationRaw { get; set; }
-    public bool IsCached { get; set; }
-    public DateTime? LastPlayedDate { get; set; }
-    public string? NameRaw { get; set; }
-    public int PlayCount { get; set; }
-    public long RemoteDurationRaw { get; set; }
-    public int RemoteSongCount { get; set; }
-    public int SongCountRaw { get; set; }
+    public virtual int Pk { get; set; }
+    public virtual string Id { get; set; } = "";
+    public virtual string AlphabeticSectionInitial { get; set; } = "?";
+    public virtual DateTime? ChangeDate { get; set; }
+    public virtual long DurationRaw { get; set; }
+    public virtual bool IsCached { get; set; }
+    public virtual DateTime? LastPlayedDate { get; set; }
+    public virtual string? NameRaw { get; set; }
+    public virtual int PlayCount { get; set; }
+    public virtual long RemoteDurationRaw { get; set; }
+    public virtual int RemoteSongCount { get; set; }
+    public virtual int SongCountRaw { get; set; }
 
-    public int? AccountPk { get; set; }
+    public virtual int? AccountPk { get; set; }
     public virtual Account? Account { get; set; }
-    public virtual ICollection<PlaylistItem> ItemsRaw { get; set; } = new HashSet<PlaylistItem>();
-    public virtual ICollection<PlaylistItem> ArtworkItemsRaw { get; set; } = new HashSet<PlaylistItem>();
+    public virtual ICollection<PlaylistItem> ItemsRaw { get; set; } = new ObservableHashSet<PlaylistItem>();
+    public virtual ICollection<PlaylistItem> ArtworkItemsRaw { get; set; } = new ObservableHashSet<PlaylistItem>();
     public virtual SearchHistoryItem? SearchHistory { get; set; }
 
     protected Playlist() { }
@@ -164,13 +165,19 @@ public class Playlist : IPlayableContainable
 
     // --- mutation -----------------------------------------------------------------------------
 
-    private PlaylistItem CreateItem(AbstractPlayable playable, int order) => new()
+    /// Creates new (proxy) item instances; set by the context when it tracks the playlist.
+    [NotMapped]
+    internal Func<PlaylistItem>? ItemFactory { get; set; }
+
+    private PlaylistItem CreateItem(AbstractPlayable playable, int order)
     {
-        Playable = playable,
-        Playlist = this,
-        Account = Account ?? playable.Account,
-        Order = order,
-    };
+        var item = ItemFactory?.Invoke() ?? throw new InvalidOperationException("Playlist is not tracked by a context");
+        item.Playable = playable;
+        item.Playlist = this;
+        item.Account = Account ?? playable.Account;
+        item.Order = order;
+        return item;
+    }
 
     public void UpdateArtworkItems()
     {
