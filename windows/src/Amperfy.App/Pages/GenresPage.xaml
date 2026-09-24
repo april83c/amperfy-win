@@ -2,6 +2,24 @@
 <Page
     x:Class="Amperfy.App.Pages.GenresPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <TextBlock x:Name="Header" Margin="24" Style="{StaticResource TitleTextBlockStyle}" />
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Amperfy.App.Controls">
+    <Page.Resources>
+        <DataTemplate x:Key="RowTemplate">
+            <controls:LibraryRow />
+        </DataTemplate>
+    </Page.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <controls:LibraryPageHeader x:Name="Header" />
+        <ListView
+            x:Name="ItemsList"
+            Grid.Row="1"
+            Padding="12,0,12,24"
+            ItemTemplate="{StaticResource RowTemplate}" />
+        <Border x:Name="EmptyHost" Grid.Row="1" Visibility="Collapsed" />
+    </Grid>
 </Page>

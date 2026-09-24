@@ -2,6 +2,30 @@
 <Page
     x:Class="Amperfy.App.Pages.PodcastDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <TextBlock x:Name="Header" Margin="24" Style="{StaticResource TitleTextBlockStyle}" />
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Amperfy.App.Controls">
+    <Page.Resources>
+        <DataTemplate x:Key="RowTemplate">
+            <controls:LibraryRow />
+        </DataTemplate>
+    </Page.Resources>
+    <Grid>
+        <ListView
+            x:Name="ItemsList"
+            Padding="12,0,12,24"
+            ItemTemplate="{StaticResource RowTemplate}">
+            <ListView.Header>
+                <StackPanel>
+                    <controls:DetailHeader x:Name="Header" />
+                    <controls:DetailListToolbar x:Name="Toolbar" />
+                    <StackPanel x:Name="HeaderExtras" />
+                    <TextBlock
+                        x:Name="EmptyText"
+                        Margin="24,24,24,24"
+                        Opacity="0.68"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </ListView.Header>
+        </ListView>
+    </Grid>
 </Page>
