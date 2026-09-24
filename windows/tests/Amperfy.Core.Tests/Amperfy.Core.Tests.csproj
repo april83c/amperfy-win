@@ -12,6 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Amperfy.Core" />
+    <Using Include="Amperfy.Core.Model" />
+    <Using Include="Amperfy.Core.Storage" />
+    <Using Include="Amperfy.Core.Common" />
+    <Using Include="Amperfy.Core.Api" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Amperfy.Core\Amperfy.Core.csproj" />
