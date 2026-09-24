@@ -8,12 +8,15 @@ public partial class App : Application
 
     public App()
     {
+        CrashLog.Install(this);
         InitializeComponent();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        CrashLog.Write("OnLaunched");
         _window = new MainWindow();
         _window.Activate();
+        CrashLog.Write("Window activated");
     }
 }
