@@ -131,7 +131,6 @@ public static class E2ETour
                 try { await services.Kit.GetMeta(account.Info).LibrarySyncer.SyncAsync(album); }
                 catch (Exception ex) { CrashLog.Write($"E2E album sync failed: {ex.Message}"); }
             }
-            nav.Navigate(typeof(AlbumDetailPage), album);
             services.Player.Play(new Amperfy.Core.Player.PlayContext(album));
             try
             {
@@ -164,7 +163,6 @@ public static class E2ETour
             await Task.Delay(2500);
             if (ScreenshotTour.FromCommandLine() is { } tour) await tour.CaptureAsync(mini, "player-mini-window");
             mini.Close();
-            nav.GoBack();
         });
     }
 }
