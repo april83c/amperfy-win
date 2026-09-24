@@ -3,6 +3,7 @@ using Amperfy.App.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Windows.Graphics;
 
 namespace Amperfy.App;
@@ -21,6 +22,13 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += (_, _) => SaveWindowPlacement();
         RootGrid.RequestedTheme = _services.RequestedElementTheme;
         _services.Alerts.Attach(AlertHost);
+        // mouse back button: go back (Alt+Left is handled by PlayerKeyboardShortcuts)
+        RootGrid.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
+        {
+            if (RootFrame.Content is not ShellPage || !e.GetCurrentPoint(RootGrid).Properties.IsXButton1Pressed) return;
+            _services.Navigation.GoBack();
+            e.Handled = true;
+        }), true);
         RootGrid.Loaded += (_, _) =>
         {
             _services.Dialogs.Attach(RootGrid.XamlRoot);
@@ -69,9 +77,14 @@ public sealed partial class MainWindow : Window
         RootFrame.BackStack.Clear();
     }
 
+    private Button? _menuButton;
+
     private void SetShellChrome(bool isShell)
     {
         SearchBox.Visibility = isShell ? Visibility.Visible : Visibility.Collapsed;
+        // the app menu (port of the macOS main menu) at the right of the title bar
+        if (isShell) _menuButton ??= AppMenu.CreateButton();
+        AppTitleBar.RightHeader = isShell ? _menuButton : null;
         AppTitleBar.IsPaneToggleButtonVisible = isShell;
         if (!isShell) AppTitleBar.IsBackButtonVisible = false;
     }
@@ -93,6 +106,9 @@ public sealed partial class MainWindow : Window
     private void AppTitleBar_BackRequested(TitleBar sender, object args) => _services.Navigation.GoBack();
 
     private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args) => PaneToggleRequested?.Invoke();
+
+    /// Opens / closes the sidebar (same as the pane toggle button of the title bar).
+    public void TogglePane() => PaneToggleRequested?.Invoke();
 
     private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {

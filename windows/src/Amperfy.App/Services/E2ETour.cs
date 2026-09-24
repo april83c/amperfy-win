@@ -112,6 +112,13 @@ public static class E2ETour
             nav.Navigate(typeof(SettingsPage));
             return Task.CompletedTask;
         });
+        yield return ("keyboard-shortcuts", async () =>
+        {
+            // ContentDialogs are not part of the captured window content: open, render and close it
+            _ = KeyboardShortcutsDialog.ShowAsync();
+            await Task.Delay(1500);
+            KeyboardShortcutsDialog.Hide();
+        });
         foreach (var step in PlayerSteps(services)) yield return step;
         _ = shell;
     }

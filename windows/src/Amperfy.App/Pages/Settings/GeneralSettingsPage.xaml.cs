@@ -6,8 +6,8 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Amperfy.App.Pages.Settings;
 
-/// General settings (port of SettingsView): version, offline mode, screen lock prevention and
-/// links to the other sections.
+/// General settings (port of SettingsView): version, offline mode, screen lock prevention, the keyboard
+/// shortcuts and links to the other sections.
 public sealed partial class GeneralSettingsPage : Page
 {
     private readonly AppServices _services = AppServices.Instance;
@@ -26,6 +26,8 @@ public sealed partial class GeneralSettingsPage : Page
             user.ScreenLockPreventionPreference = v;
             ScreenLockPreventionService.Apply();
         });
+        KeyboardHost.Children.Add(SettingsUi.ActionCard("Keyboard Shortcuts", "Player, navigation and list shortcuts (F1).", "\uE765",
+            () => _ = KeyboardShortcutsDialog.ShowAsync()));
         foreach (var section in SettingsPage.Sections.Skip(1))
         {
             SectionLinksHost.Children.Add(SettingsUi.ActionCard(section.Title, null, section.Glyph,
