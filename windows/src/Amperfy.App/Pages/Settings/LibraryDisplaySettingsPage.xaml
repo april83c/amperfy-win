@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.LibraryDisplaySettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Amperfy.App.Pages.Settings"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <Page.Resources>
+        <DataTemplate x:Key="ReorderItemTemplate" x:DataType="local:ReorderableSettingItem">
+            <Grid Padding="0,4" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Glyph="&#xE76F;" />
+                <CheckBox
+                    Grid.Column="1"
+                    MinWidth="0"
+                    VerticalAlignment="Center"
+                    IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
+                <FontIcon
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Glyph="{x:Bind Glyph}" />
+                <TextBlock
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind Title}"
+                    TextTrimming="CharacterEllipsis" />
+                <Button
+                    Grid.Column="4"
+                    Padding="8,6"
+                    Click="MoveUp_Click"
+                    ToolTipService.ToolTip="Move up">
+                    <FontIcon FontSize="12" Glyph="&#xE70E;" />
+                </Button>
+                <Button
+                    Grid.Column="5"
+                    Padding="8,6"
+                    Click="MoveDown_Click"
+                    ToolTipService.ToolTip="Move down">
+                    <FontIcon FontSize="12" Glyph="&#xE70D;" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock x:Name="AccountHintText" Margin="1,0,0,8" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Sidebar" />
+            <toolkit:SettingsCard
+                Header="Library Categories"
+                Description="Checked categories are shown in the sidebar in this order. Drag the rows or use the arrows to reorder.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8FD;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button x:Name="ResetCategoriesButton" Content="Reset to default" />
+            </toolkit:SettingsCard>
+            <Border
+                Padding="12,4"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="4">
+                <ListView
+                    x:Name="CategoriesList"
+                    AllowDrop="True"
+                    CanDragItems="True"
+                    CanReorderItems="True"
+                    ItemTemplate="{StaticResource ReorderItemTemplate}"
+                    SelectionMode="None" />
+            </Border>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Home" />
+            <toolkit:SettingsCard
+                Header="Home Sections"
+                Description="Checked sections are shown on the home page in this order.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button x:Name="ResetHomeButton" Content="Reset to default" />
+            </toolkit:SettingsCard>
+            <Border
+                Padding="12,4"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="4">
+                <ListView
+                    x:Name="HomeSectionsList"
+                    AllowDrop="True"
+                    CanDragItems="True"
+                    CanReorderItems="True"
+                    ItemTemplate="{StaticResource ReorderItemTemplate}"
+                    SelectionMode="None" />
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

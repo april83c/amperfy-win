@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.AccountSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Accounts" />
+            <toolkit:SettingsExpander
+                x:Name="AccountsExpander"
+                Header="Accounts"
+                Description="Switch the active account or add another server account."
+                IsExpanded="True">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE716;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <Button x:Name="AddAccountButton" Content="Add account" />
+            </toolkit:SettingsExpander>
+
+            <TextBlock
+                x:Name="NotLoggedInText"
+                Margin="1,24,0,0"
+                Text="You aren't logged in yet."
+                Visibility="Collapsed" />
+
+            <StackPanel x:Name="ActiveAccountPanel" Spacing="4">
+                <TextBlock x:Name="ActiveAccountHeader" Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Active account" />
+                <toolkit:SettingsExpander x:Name="ServerExpander" Header="Server">
+                    <toolkit:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE774;" />
+                    </toolkit:SettingsExpander.HeaderIcon>
+                    <toolkit:SettingsExpander.Items>
+                        <toolkit:SettingsCard Header="URL">
+                            <TextBlock x:Name="ServerUrlText" IsTextSelectionEnabled="True" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard Header="Username">
+                            <TextBlock x:Name="UsernameText" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard Header="Backend API">
+                            <TextBlock x:Name="BackendApiText" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard Header="Server API Version">
+                            <TextBlock x:Name="ServerApiVersionText" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard Header="Client API Version">
+                            <TextBlock x:Name="ClientApiVersionText" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </toolkit:SettingsCard>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
+
+                <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Appearance" />
+                <toolkit:SettingsCard Header="Theme Color" Description="Accent color of the app while this account is active.">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE790;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <ComboBox x:Name="ThemeCombo" MinWidth="200" />
+                </toolkit:SettingsCard>
+                <toolkit:SettingsCard Header="Artwork Display" Description="Which artwork is shown for songs, albums and podcasts of this account.">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE91B;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <ComboBox x:Name="ArtworkDisplayCombo" MinWidth="200" />
+                </toolkit:SettingsCard>
+                <toolkit:SettingsCard
+                    x:Name="SidebarCard"
+                    Header="Library Categories"
+                    Description="Choose and order the library categories in the sidebar and the sections of the home page."
+                    IsClickEnabled="True">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                </toolkit:SettingsCard>
+
+                <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Connection" />
+                <toolkit:SettingsExpander
+                    x:Name="ServerUrlsExpander"
+                    Header="Server URLs"
+                    Description="Alternative URLs must reach the same server. Otherwise library inconsistencies will occur.">
+                    <toolkit:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE71B;" />
+                    </toolkit:SettingsExpander.HeaderIcon>
+                    <Button x:Name="AddUrlButton" Content="Add alternative URL" />
+                </toolkit:SettingsExpander>
+                <toolkit:SettingsCard x:Name="HeadersCard" Header="Custom HTTP Headers">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE943;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <Button x:Name="EditHeadersButton" Content="Edit" />
+                </toolkit:SettingsCard>
+                <toolkit:SettingsCard Header="Password" Description="Update the password of this account. It is verified with the server before it is saved.">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8D7;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <Button x:Name="UpdatePasswordButton" Content="Update password" />
+                </toolkit:SettingsCard>
+
+                <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Library" />
+                <toolkit:SettingsCard
+                    Header="Resync Library"
+                    Description="Resets the local library and syncs it again from the server. Downloaded files remain on this device.">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE895;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <Button x:Name="ResyncButton" Content="Resync" />
+                </toolkit:SettingsCard>
+                <toolkit:SettingsCard
+                    Header="Logout"
+                    Description="Signs out of this account. The login credentials are removed and all downloaded files of this account are deleted.">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE7E8;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <Button x:Name="LogoutButton" Content="Logout" />
+                </toolkit:SettingsCard>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

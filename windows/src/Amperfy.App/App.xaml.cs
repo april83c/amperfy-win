@@ -31,11 +31,12 @@ public partial class App : Application
             CrashLog.Write($"Initialization failed: {ex}");
             throw;
         }
+        SettingsBootstrap.Initialize(services);
         _window = new MainWindow();
         services.MainWindow = _window;
         _window.Closed += (_, _) =>
         {
-            SystemIntegration.Shutdown();
+            SettingsBootstrap.Shutdown();
             services.Shutdown();
         };
         _window.Activate();
@@ -56,7 +57,7 @@ public partial class App : Application
         {
             if (args.Kind == ExtendedActivationKind.AppNotification && args.Data is AppNotificationActivatedEventArgs toast)
             {
-                SystemIntegration.HandleToastActivation(new Dictionary<string, string>(toast.Arguments));
+                ToastNotificationService.HandleActivation(new Dictionary<string, string>(toast.Arguments));
             }
             else if (args.Kind == ExtendedActivationKind.Protocol && args.Data is IProtocolActivatedEventArgs protocol)
             {

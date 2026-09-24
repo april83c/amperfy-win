@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.PlayerSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Playback" />
+            <toolkit:SettingsCard Header="ReplayGain" Description="Automatically normalize the track volume based on ReplayGain information for consistent loudness.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE767;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="ReplayGainToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard x:Name="AutoCacheCard" Header="Auto-cache played tracks and download upcoming ones">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE896;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="AutoCacheToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Song Playback Resume" Description="Keeps track of the song progress so playback continues from the previously saved position.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE823;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="PlaybackResumeToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Manual Playback" Description="Start playback only when the Play button is pressed (selecting a song only queues it).">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE768;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="ManualPlaybackToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Autoplay After End" Description="When the queue ends, automatically continue playback using Instant Mix to find similar songs.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8EE;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="AutoplayToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard x:Name="SleepTimerCard" Header="Sleep Timer" Description="Pause playback after a time or at the end of the current song or podcast episode.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE916;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="SleepTimerCombo" MinWidth="240" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Streaming" />
+            <TextBlock x:Name="NetworkInfoText" Margin="1,0,0,4" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <toolkit:SettingsExpander
+                Header="Unmetered Network"
+                Description="Streaming on unmetered connections (e.g. Wi-Fi or Ethernet). Transcoding is recommended for better compatibility."
+                IsExpanded="True">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE839;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard Header="Streaming Format (Transcoding)">
+                        <ComboBox x:Name="UnmeteredFormatCombo" MinWidth="220" />
+                    </toolkit:SettingsCard>
+                    <toolkit:SettingsCard Header="Streaming Bitrate Limit">
+                        <ComboBox x:Name="UnmeteredBitrateCombo" MinWidth="220" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+            <toolkit:SettingsExpander
+                Header="Metered Network"
+                Description="Streaming on metered connections (e.g. mobile hotspot or a connection set as metered in Windows)."
+                IsExpanded="True">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xEC3B;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard Header="Streaming Format (Transcoding)">
+                        <ComboBox x:Name="MeteredFormatCombo" MinWidth="220" />
+                    </toolkit:SettingsCard>
+                    <toolkit:SettingsCard Header="Streaming Bitrate Limit">
+                        <ComboBox x:Name="MeteredBitrateCombo" MinWidth="220" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+            <toolkit:SettingsCard x:Name="CacheFormatCard" Header="Cache Format (Transcoding)">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xEDA2;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="CacheFormatCombo" MinWidth="220" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Scrobble" />
+            <toolkit:SettingsCard
+                x:Name="ScrobbleCard"
+                Header="Scrobble streamed Songs"
+                Description="Enable to scrobble all streamed songs, even if the server already marks them as played. Setting of the active account.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8EC;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="ScrobbleToggle" />
+            </toolkit:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

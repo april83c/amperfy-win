@@ -16,6 +16,8 @@ public sealed class DialogService
         if (_xamlRoot is null || _isShowing) return ContentDialogResult.None;
         dialog.XamlRoot = _xamlRoot;
         dialog.Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"];
+        // dialogs are hosted in a popup: follow the app's appearance mode (Settings > Display)
+        if (_xamlRoot.Content is FrameworkElement root) dialog.RequestedTheme = root.ActualTheme;
         _isShowing = true;
         try { return await dialog.ShowAsync(); }
         finally { _isShowing = false; }

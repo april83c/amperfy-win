@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.GeneralSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Amperfy" />
+            <toolkit:SettingsCard Header="Version" Description="Amperfy for Windows">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE946;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <TextBlock x:Name="VersionText" IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Connection" />
+            <toolkit:SettingsCard
+                Header="Offline Mode"
+                Description="Songs, podcasts, and artworks won’t download offline. Searches are limited to this device, and playlists won’t sync with the server.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8CD;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="OfflineModeToggle" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Power" />
+            <toolkit:SettingsCard
+                Header="Prevent Screen Lock"
+                Description="Keeps the display on (and the PC awake) while Amperfy is running.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE708;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="ScreenLockCombo" MinWidth="200" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="More settings" />
+            <StackPanel x:Name="SectionLinksHost" Spacing="4" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

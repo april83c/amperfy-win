@@ -64,6 +64,16 @@ The XAML compiler runs only in the Windows CI build. `scripts/linux-check.sh` co
 - **Pages need a XAML file:** every type passed to `Frame.Navigate` must be a XAML page (`.xaml` + `.xaml.cs`), so that the XAML compiler generates its type metadata. Navigating to a code-only `Page` subclass crashes the process natively.
 - **Community toolkit:** CommunityToolkit.WinUI controls available: `SettingsCard`, `SettingsExpander` (`xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"`), `Segmented`.
 
+## Settings
+- `Pages/SettingsPage` lists the sections; the section pages are in `Pages/Settings/*` (all XAML pages).
+  - Open a section with `Navigate(typeof(SettingsPage), SettingsPage.AccountSection)` (see the `*Section` constants).
+  - Section pages declare their cards in XAML (`SettingsCard`/`SettingsExpander`) and wire values and events in code-behind (`SettingsUi.Bind`).
+- Settings are applied immediately. Side effects live in `Services/`:
+  - `ThemeService`: account accent color (`ApplyAccentColor`, follows `AccountActiveChanged`) and appearance mode (`ApplyAppearance` → `MainWindow.ApplyRequestedTheme`).
+  - `ScreenLockPreventionService`, `ToastNotificationService`, `MeteredConnectionDetector` (metered network = "cellular" streaming settings).
+  - `SettingsBootstrap.Initialize/Shutdown` starts and stops them (called from `App`).
+- Display preferences (`IsShowSongDuration`, `IsShowRating`, `IsShowMusicPlayerSkipButtons`, …) are only stored; pages and the player read them when they render.
+
 ## Verifying changes
 - `./scripts/linux-check.sh` compiles the app's C# on Linux; it must end with `Build succeeded`.
 - `dotnet test tests/Amperfy.Core.Tests` runs the core tests.

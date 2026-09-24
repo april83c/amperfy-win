@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.NotificationSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Windows notifications" />
+            <toolkit:SettingsCard x:Name="PodcastNotificationsCard" Header="New Podcast Episodes">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE720;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="PodcastNotificationsToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Finished Downloads" Description="Show a notification when all queued songs and podcast episodes have been downloaded.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE896;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="DownloadNotificationsToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard
+                x:Name="SystemSettingsCard"
+                Header="Windows notification settings"
+                Description="Notifications can also be turned off or configured for Amperfy in the Windows settings."
+                IsClickEnabled="True">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE713;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="In-app messages" />
+            <toolkit:SettingsCard
+                x:Name="EventLogCard"
+                Header="Errors and information"
+                Description="Server errors and information are shown at the bottom right of the window and recorded in the event log."
+                IsClickEnabled="True">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE7BA;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

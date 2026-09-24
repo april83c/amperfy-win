@@ -159,6 +159,10 @@ public sealed class UserSettings : ObservableSettings
 
     private bool _isDownloadNotificationsEnabled = false;
     public bool IsDownloadNotificationsEnabled { get => _isDownloadNotificationsEnabled; set => SetField(ref _isDownloadNotificationsEnabled, value); }
+
+    /// Windows specific: show a notification for new podcast episodes found by the background fetch.
+    private bool _isPodcastNotificationsEnabled = true;
+    public bool IsPodcastNotificationsEnabled { get => _isPodcastNotificationsEnabled; set => SetField(ref _isPodcastNotificationsEnabled, value); }
 }
 
 public sealed class LibraryDisplaySettings

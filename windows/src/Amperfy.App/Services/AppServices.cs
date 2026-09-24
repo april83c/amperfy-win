@@ -59,8 +59,7 @@ public sealed class AppServices
         SecretProtection.Protector = new DpapiSecretProtector();
         CacheFileManager.Shared = new CacheFileManager(AppPaths.CacheDirectory);
         var storage = PersistentStorage.Open(AppPaths.DataDirectory);
-        var networkMonitor = new NetworkMonitor { IsMeteredProvider = SystemIntegration.IsMeteredConnection };
-        var kit = new AmperKit(storage, networkMonitor);
+        var kit = new AmperKit(storage, new NetworkMonitor());
         Instance = new AppServices(kit);
         ArtworkImage.SettingsProvider = account =>
         {
@@ -68,7 +67,6 @@ public sealed class AppServices
             return (setting.ArtworkDisplayPreference, setting.ThemePreference);
         };
         kit.UserStatistics.SessionStarted();
-        SystemIntegration.InitializeToasts(kit.LocalNotificationManager);
         SystemIntegration.RegisterProtocol();
         return Instance;
     }
