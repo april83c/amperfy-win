@@ -3,6 +3,7 @@ using Amperfy.Core.Model;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace Amperfy.App.Services;
 
@@ -58,8 +59,21 @@ public sealed class AlertService : IAlertDisplayable
             details.Click += async (_, _) => await _dialogs.ShowMessageAsync(topic, detailMessage);
             bar.ActionButton = details;
         }
-        bar.Closed += (_, _) => _host.Children.Remove(bar);
-        _host.Children.Add(bar);
+        // InfoBar backgrounds are translucent: put it on a solid, elevated card so it stays readable over content
+        var card = new Border
+        {
+            Child = bar,
+            CornerRadius = new CornerRadius(8),
+            MaxWidth = 460,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Background = Application.Current.Resources.TryGetValue("SolidBackgroundFillColorBaseBrush", out var brush) && brush is Brush b
+                ? b
+                : null,
+            Shadow = new ThemeShadow(),
+            Translation = new System.Numerics.Vector3(0, 0, 16),
+        };
+        bar.Closed += (_, _) => _host.Children.Remove(card);
+        _host.Children.Add(card);
         while (_host.Children.Count > MaxVisible) _host.Children.RemoveAt(0);
 
         var timer = _dispatcher!.CreateTimer();
