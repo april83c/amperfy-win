@@ -100,7 +100,7 @@ public sealed class AmperKit : IDisposable
             credentials.BackendApi = authenticatedApiType;
             accountInfo = AccountInfo.Create(credentials);
             meta.BackendApi.SelectedApi = authenticatedApiType;
-            meta.Account.AssignInfo(accountInfo);
+            meta.Account.AssignAccount(credentials.ServerUrl, credentials.Username, authenticatedApiType);
             Library.SaveContext();
             Settings.Accounts.Login(credentials);
             meta.BackendApi.ProvideCredentials(credentials);

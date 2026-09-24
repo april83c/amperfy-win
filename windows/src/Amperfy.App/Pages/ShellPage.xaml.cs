@@ -139,6 +139,9 @@ public sealed partial class ShellPage : Page
             NavView.SelectedItem = NavView.SettingsItem;
             return;
         }
+        // Frame.Navigated fires before the page's OnNavigatedTo: prefer the navigation parameter
+        else if (_services.Navigation.CurrentParameter is LibraryDisplayType navType && ContentFrame.Content is ILibraryCategoryPage)
+            tag = LibraryTagPrefix + navType;
         else if (PageRegistry.LibraryTypeOf(ContentFrame) is { } libType) tag = LibraryTagPrefix + libType;
         _isSyncingSelection = true;
         NavView.SelectedItem = tag is null ? null : NavView.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == tag);

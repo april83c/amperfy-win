@@ -118,6 +118,8 @@ public class ServerIntegrationTest(ITestOutputHelper output)
             using var kit = new AmperKit(PersistentStorage.CreateInMemory(), new AlwaysOnlineNetworkMonitor());
             Assert.False(kit.IsLoggedIn);
             var account = await kit.LoginAsync(cfg.Url, cfg.User, cfg.Password, BackendApiType.NotDetected);
+            Assert.Equal(cfg.User, account.UserName);
+            Assert.Equal(cfg.Url, account.ServerUrl);
             Assert.True(kit.IsLoggedIn);
             Assert.Equal(account.Info, kit.Settings.Accounts.Active);
             await Assert.ThrowsAsync<AuthenticationError>(() => kit.LoginAsync(cfg.Url, cfg.User, cfg.Password, BackendApiType.NotDetected));

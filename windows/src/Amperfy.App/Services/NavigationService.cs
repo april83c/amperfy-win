@@ -10,10 +10,17 @@ public sealed class NavigationService
 
     public event Action? Navigated;
 
+    /// Navigation parameter of the current page.
+    public object? CurrentParameter { get; private set; }
+
     public void Attach(Frame frame)
     {
         _frame = frame;
-        frame.Navigated += (_, _) => Navigated?.Invoke();
+        frame.Navigated += (_, e) =>
+        {
+            CurrentParameter = e.Parameter;
+            Navigated?.Invoke();
+        };
     }
 
     public Frame? Frame => _frame;
