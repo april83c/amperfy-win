@@ -12,7 +12,7 @@ using Windows.Graphics;
 namespace Amperfy.App.Controls.Player;
 
 /// Small player window (port of the macOS mini player, MiniPlayerSceneDelegate / MiniPlayerView): artwork, title,
-/// transport controls and seek bar. "Always on top" uses the compact overlay presenter (picture in picture);
+/// transport controls and seek bar, optionally the queue or the lyrics below. "Always on top" uses the compact overlay presenter (picture in picture);
 /// otherwise a small normal window. Showing it minimizes the main window, closing it restores the main window.
 public sealed partial class MiniPlayerWindow : Window
 {
@@ -26,6 +26,11 @@ public sealed partial class MiniPlayerWindow : Window
     private readonly TextBlock _artist;
     private readonly ToggleButton _pin;
     private readonly Grid _root;
+    private readonly ToggleButton _queueToggle;
+    private readonly ToggleButton _lyricsToggle;
+    private readonly Border _expandHost;
+    private QueueView? _queueView;
+    private LyricsView? _lyricsView;
     private bool _restoreMainWindowOnClose = true;
 
     public static bool IsOpen => _instance is not null;
@@ -115,16 +120,25 @@ public sealed partial class MiniPlayerWindow : Window
         extras.Children.Add(PlayerUi.CreateVolumeButton(32));
         extras.Children.Add(PlayerUi.CreatePlaybackRateButton(32));
         extras.Children.Add(PlayerUi.CreateSleepTimerButton(32));
+        // queue / lyrics below the controls (the macOS mini player window is the full popup player)
+        _queueToggle = PlayerUi.CreateToggleButton(Icons.Queue, "Queue", () => ToggleExpanded(lyrics: false), 32, 14);
+        _lyricsToggle = PlayerUi.CreateToggleButton(Icons.Lyrics, "Lyrics", () => ToggleExpanded(lyrics: true), 32, 14);
+        extras.Children.Add(_lyricsToggle);
+        extras.Children.Add(_queueToggle);
+        _expandHost = new Border { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 4, 0, 0) };
 
         _root = new Grid { Padding = new Thickness(12, 8, 12, 8), RowSpacing = 4 };
         _root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         _root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         _root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         Grid.SetRow(transport, 1);
         Grid.SetRow(extras, 2);
+        Grid.SetRow(_expandHost, 3);
         _root.Children.Add(info);
         _root.Children.Add(transport);
         _root.Children.Add(extras);
+        _root.Children.Add(_expandHost);
         _root.RequestedTheme = AppServices.Instance.RequestedElementTheme;
         if (!Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
         {
@@ -167,13 +181,57 @@ public sealed partial class MiniPlayerWindow : Window
                 presenter.IsAlwaysOnTop = false;
                 AppWindow.SetPresenter(presenter);
             }
-            AppWindow.Resize(new SizeInt32(Scale(440), Scale(250)));
+            ApplySize();
         }
         catch (Exception ex)
         {
             AmperfyLog.Warning("MiniPlayer", $"Configuring the window failed: {ex.Message}");
         }
         _pin.IsChecked = alwaysOnTop;
+    }
+
+    private bool IsExpanded => _expandHost.Visibility == Visibility.Visible;
+
+    private void ApplySize()
+    {
+        try
+        {
+            AppWindow.Resize(new SizeInt32(Scale(440), Scale(IsExpanded ? 620 : 250)));
+        }
+        catch (Exception ex)
+        {
+            AmperfyLog.Warning("MiniPlayer", $"Resizing the window failed: {ex.Message}");
+        }
+    }
+
+    /// Shows / hides the queue or the lyrics below the player controls (the window grows).
+    private void ToggleExpanded(bool lyrics)
+    {
+        FrameworkElement content = lyrics
+            ? _lyricsView ??= new LyricsView { ShowsTitle = false }
+            : _queueView ??= new QueueView { ShowsTitle = false };
+        var hide = IsExpanded && ReferenceEquals(_expandHost.Child, content);
+        if (hide)
+        {
+            _expandHost.Child = null;
+            _expandHost.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            PlayerUi.DetachFromParent(content);
+            _expandHost.Child = content;
+            _expandHost.Visibility = Visibility.Visible;
+        }
+        RefreshExpandToggles();
+        ApplySize();
+    }
+
+    private void RefreshExpandToggles()
+    {
+        _queueToggle.IsChecked = IsExpanded && _expandHost.Child is QueueView;
+        _lyricsToggle.IsChecked = IsExpanded && _expandHost.Child is LyricsView;
+        var lyricsAvailable = PlayerUi.IsLyricsAvailable;
+        _lyricsToggle.Visibility = lyricsAvailable || _lyricsToggle.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private int Scale(double value)
@@ -199,6 +257,7 @@ public sealed partial class MiniPlayerWindow : Window
         var playable = PlayerUi.Player.CurrentlyPlaying;
         if (!ReferenceEquals(_artwork.Entity, playable)) _artwork.Entity = playable;
         _pin.IsChecked = AppServices.Instance.Settings.User.IsMiniPlayerAlwaysOnTop;
+        RefreshExpandToggles();
     }
 
     private void RefreshArtwork() => _artwork.Refresh();
