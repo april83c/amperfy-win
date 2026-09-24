@@ -30,7 +30,11 @@ public sealed class AlertService : IAlertDisplayable
 
     public void ShowInfo(string title, string message) => Display(title, message, message, LogEntryType.Info);
 
-    private void Show(string topic, string shortMessage, string detailMessage, LogEntryType logType)
+    /// An information that stays longer than the event messages (e.g. the one-time welcome hints).
+    public void ShowNotice(string title, string message) =>
+        _dispatcher?.TryEnqueue(() => Show(title, message, message, LogEntryType.Info, TimeSpan.FromSeconds(30)));
+
+    private void Show(string topic, string shortMessage, string detailMessage, LogEntryType logType, TimeSpan? duration = null)
     {
         if (_host is null) return;
         var bar = new InfoBar
@@ -59,7 +63,7 @@ public sealed class AlertService : IAlertDisplayable
         while (_host.Children.Count > MaxVisible) _host.Children.RemoveAt(0);
 
         var timer = _dispatcher!.CreateTimer();
-        timer.Interval = TimeSpan.FromSeconds(logType is LogEntryType.Info ? 5 : 10);
+        timer.Interval = duration ?? TimeSpan.FromSeconds(logType is LogEntryType.Info ? 5 : 10);
         timer.IsRepeating = false;
         timer.Tick += (_, _) => bar.IsOpen = false;
         timer.Start();
