@@ -38,7 +38,7 @@ jobs:
         run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 -p:Platform=x64 -o out/Amperfy-win-x64
       - name: Smoke test (launch + screenshot)
         shell: pwsh
-        run: windows/build/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
+        run: ./windows/build/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
       - name: Upload app
         uses: actions/upload-artifact@v4
         with:
