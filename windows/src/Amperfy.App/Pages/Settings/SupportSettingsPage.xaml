@@ -10,7 +10,7 @@
             <toolkit:SettingsCard
                 x:Name="ReportIssueCard"
                 Header="Report an issue on GitHub"
-                Description="Please attach the diagnostic information (see below) to your report."
+                Description="Issues of this Windows port go to its own repository, not to the original Amperfy project. Please attach the diagnostic information (see below)."
                 IsClickEnabled="True">
                 <toolkit:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xEBE8;" />

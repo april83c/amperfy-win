@@ -1,3 +1,4 @@
+using Amperfy.App.Services;
 using Amperfy.Core;
 using Microsoft.UI.Xaml.Controls;
 
@@ -7,6 +8,7 @@ namespace Amperfy.App.Pages.Settings;
 /// (repository LICENSE, embedded into the app) and the acknowledgements.
 public sealed partial class AboutSettingsPage : Page
 {
+    /// The original Amperfy project (iOS/iPadOS/macOS)
     public const string SourceUrl = "https://github.com/BLeeEZ/amperfy";
     private const string LicenseResourceName = "Amperfy.LICENSE.txt";
 
@@ -22,6 +24,7 @@ public sealed partial class AboutSettingsPage : Page
         ("SQLite", "Public Domain", "Database engine", "https://www.sqlite.org"),
         ("Castle Core", "Apache License 2.0", "Dynamic proxies used by EF Core lazy loading", "https://github.com/castleproject/Core"),
         ("TagLib#", "LGPL-2.1", "Embedded artworks and tags of downloaded files", "https://github.com/mono/taglib-sharp"),
+        ("Velopack", "MIT License", "Installer and automatic updates", "https://github.com/velopack/velopack"),
     ];
 
     /// Third party software of the iOS/macOS app (LicenseSettingsView.swift).
@@ -46,8 +49,9 @@ public sealed partial class AboutSettingsPage : Page
     {
         InitializeComponent();
         VersionText.Text = $"Version {AmperfyInfo.Version}";
-        SourceCard.Click += (_, _) => SettingsUi.OpenUri(SourceUrl);
-        ToolTipService.SetToolTip(SourceCard, SourceUrl);
+        SourceCard.Click += (_, _) => SettingsUi.OpenUri(UpdateService.RepositoryUrl);
+        ToolTipService.SetToolTip(SourceCard, UpdateService.RepositoryUrl);
+        SetupUpdates();
         LicenseText.Text = LoadLicense();
 
         foreach (var (name, license, purpose, url) in WindowsPackages)
@@ -64,6 +68,32 @@ public sealed partial class AboutSettingsPage : Page
         {
             UpstreamExpander.Items.Add(SettingsUi.Card(name, $"{license} · used by the iOS/macOS app"));
         }
+    }
+
+    private void SetupUpdates()
+    {
+        if (!UpdateService.IsInstalled)
+        {
+            UpdatesCard.Description = "Automatic updates are available when Amperfy was installed with the installer from the releases page.";
+            CheckUpdatesButton.IsEnabled = false;
+            return;
+        }
+        UpdatesCard.Description = UpdateService.PendingVersion is { } pending
+            ? $"Version {pending} is downloaded and will be installed when Amperfy closes."
+            : "Amperfy checks for updates automatically and installs them when it closes.";
+        CheckUpdatesButton.Click += async (_, _) =>
+        {
+            CheckUpdatesButton.IsEnabled = false;
+            UpdatesCard.Description = "Checking for updates…";
+            var status = await UpdateService.CheckAndDownloadAsync(isUserInitiated: true);
+            UpdatesCard.Description = status switch
+            {
+                UpdateService.Status.UpToDate => $"Amperfy {UpdateService.CurrentVersion} is up to date.",
+                UpdateService.Status.UpdateReady => $"Version {UpdateService.PendingVersion} is downloaded and will be installed when Amperfy closes.",
+                _ => "The update check failed. See Support > Event Log.",
+            };
+            CheckUpdatesButton.IsEnabled = true;
+        };
     }
 
     /// The GPLv3 text of the repository (embedded resource).

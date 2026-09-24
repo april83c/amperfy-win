@@ -1,6 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using Velopack;
 using WinRT;
 
 namespace Amperfy.App;
@@ -14,6 +15,8 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack install/update/uninstall hooks (exit the process when handled); must run first
+        VelopackApp.Build().Run();
         XamlCheckProcessRequirements();
         ComWrappersSupport.InitializeComWrappers();
         if (IsRedirected()) return 0;

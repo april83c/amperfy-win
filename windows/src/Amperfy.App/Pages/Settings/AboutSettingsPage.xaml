@@ -15,7 +15,13 @@
                 </StackPanel>
             </StackPanel>
 
-            <toolkit:SettingsCard x:Name="SourceCard" Header="Source Code" Description="Amperfy is free software. The Windows app is a port of the iOS and macOS app." IsClickEnabled="True">
+            <toolkit:SettingsCard x:Name="UpdatesCard" Header="Updates">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE895;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <Button x:Name="CheckUpdatesButton" Content="Check for updates" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard x:Name="SourceCard" Header="Source Code" Description="This Windows port is an unofficial, personal port of Amperfy and not affiliated with the original project. Report its issues here." IsClickEnabled="True">
                 <toolkit:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE943;" />
                 </toolkit:SettingsCard.HeaderIcon>

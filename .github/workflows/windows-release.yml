@@ -1,55 +1,89 @@
 name: Windows release
 
-# Builds x64 and ARM64 packages (zip, framework-dependent: needs the .NET 10 Runtime) and attaches them to a GitHub release.
+# Every pushed tag (e.g. v2.0.1) builds the Windows app for x64 and ARM64, packs it with Velopack
+# (installer, portable zip, full + delta update packages) and publishes a GitHub release. The
+# release is also the update feed of the installed apps (Velopack GithubSource, one channel per
+# architecture: win-x64, win-arm64). Tags with a suffix (v2.1.0-beta.1) become pre-releases.
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g. win-v2.0.0)'
-        required: true
   push:
-    tags: ['win-v*']
+    tags: ['*']
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  VPK_VERSION: 1.2.158
 
 jobs:
-  package:
+  release:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Publish
-        run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch == 'x64' && 'x64' || 'ARM64' }} -o out/Amperfy
-      - name: Zip
+      - name: Version from tag
         shell: pwsh
-        run: Compress-Archive -Path out/Amperfy/* -DestinationPath out/Amperfy-win-${{ matrix.arch }}.zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Amperfy-win-${{ matrix.arch }}
-          path: out/Amperfy-win-${{ matrix.arch }}.zip
-
-  release:
-    needs: package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-      - name: Create release
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^[vV]', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Tag '$tag' is not a semantic version (expected e.g. v2.0.1)" }
+          "VERSION=$version" >> $env:GITHUB_ENV
+          "PRERELEASE=$([int]($version -match '-'))" >> $env:GITHUB_ENV
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk --version ${{ env.VPK_VERSION }}
+      - name: Build and pack
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          gh release create "$TAG" dist/*.zip --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "Amperfy for Windows $TAG" --notes "Unzip and run Amperfy.exe. Requires the .NET 10 Runtime (https://dotnet.microsoft.com/download/dotnet/10.0, x64 or Arm64 matching the zip) and Windows 10 version 2004 or later / Windows 11."
+          $repo = "${{ github.server_url }}/${{ github.repository }}"
+          $notes = "release-notes.md"
+          @"
+          Amperfy for Windows $env:VERSION
+
+          **Install:** download ``AmperfyWin-win-x64-Setup.exe`` (or ``AmperfyWin-win-arm64-Setup.exe`` for ARM devices) and run it. The installer sets up the .NET 10 Runtime if needed, and Amperfy updates itself when a new version is released.
+
+          **Portable:** ``AmperfyWin-win-x64-Portable.zip`` / ``AmperfyWin-win-arm64-Portable.zip``.
+
+          Unofficial port, not affiliated with the original Amperfy project: please report issues here, not upstream.
+          "@ | Set-Content $notes
+          foreach ($arch in 'x64', 'arm64') {
+            $platform = if ($arch -eq 'x64') { 'x64' } else { 'ARM64' }
+            dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-$arch -p:Platform=$platform -p:Version=$env:VERSION -o publish/$arch
+            if ($LASTEXITCODE -ne 0) { throw "publish $arch failed" }
+            # previous release of the channel (for delta packages); fails harmlessly for the first release
+            vpk download github --repoUrl $repo --token $env:GH_TOKEN --channel win-$arch -o releases/$arch
+            $global:LASTEXITCODE = 0
+            # packId AmperfyWin: installs to %LOCALAPPDATA%\AmperfyWin, separate from the app data in %LOCALAPPDATA%\Amperfy
+            vpk pack --packId AmperfyWin --packVersion $env:VERSION --packDir publish/$arch --mainExe Amperfy.exe `
+              --packTitle Amperfy --packAuthors "Amperfy for Windows" --icon windows/src/Amperfy.App/Assets/AppIcon.ico `
+              --channel win-$arch --runtime win-$arch --framework net10-$arch-runtime --releaseNotes $notes -o releases/$arch
+            if ($LASTEXITCODE -ne 0) { throw "pack $arch failed" }
+          }
+          Get-ChildItem releases -Recurse -File | Format-Table FullName, Length -AutoSize
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $repo = "${{ github.server_url }}/${{ github.repository }}"
+          $extra = @()
+          if ($env:PRERELEASE -eq '1') { $extra += '--pre' }
+          foreach ($arch in 'x64', 'arm64') {
+            vpk upload github --repoUrl $repo --token $env:GH_TOKEN --channel win-$arch -o releases/$arch `
+              --publish --merge @extra --releaseName "Amperfy for Windows $env:VERSION" --tag "${{ github.ref_name }}" --targetCommitish "${{ github.sha }}"
+            if ($LASTEXITCODE -ne 0) { throw "upload $arch failed" }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: velopack-releases
+          path: releases
+          retention-days: 7

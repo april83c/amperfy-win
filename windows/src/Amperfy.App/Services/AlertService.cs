@@ -35,7 +35,12 @@ public sealed class AlertService : IAlertDisplayable
     public void ShowNotice(string title, string message) =>
         _dispatcher?.TryEnqueue(() => Show(title, message, message, LogEntryType.Info, TimeSpan.FromSeconds(30)));
 
-    private void Show(string topic, string shortMessage, string detailMessage, LogEntryType logType, TimeSpan? duration = null)
+    /// A message with an action button that stays until it is closed or the action is invoked.
+    public void ShowAction(string title, string message, string actionText, Action action) =>
+        _dispatcher?.TryEnqueue(() => Show(title, message, message, LogEntryType.Info, TimeSpan.Zero, (actionText, action)));
+
+    private void Show(string topic, string shortMessage, string detailMessage, LogEntryType logType, TimeSpan? duration = null,
+        (string Text, Action Action)? action = null)
     {
         if (_host is null) return;
         var bar = new InfoBar
@@ -53,7 +58,17 @@ public sealed class AlertService : IAlertDisplayable
             MaxWidth = 460,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        if (!string.IsNullOrEmpty(detailMessage) && detailMessage != shortMessage)
+        if (action is { } a)
+        {
+            var button = new Button { Content = a.Text };
+            button.Click += (_, _) =>
+            {
+                bar.IsOpen = false;
+                a.Action();
+            };
+            bar.ActionButton = button;
+        }
+        else if (!string.IsNullOrEmpty(detailMessage) && detailMessage != shortMessage)
         {
             var details = new HyperlinkButton { Content = "Details" };
             details.Click += async (_, _) => await _dialogs.ShowMessageAsync(topic, detailMessage);
@@ -76,6 +91,7 @@ public sealed class AlertService : IAlertDisplayable
         _host.Children.Add(card);
         while (_host.Children.Count > MaxVisible) _host.Children.RemoveAt(0);
 
+        if (duration == TimeSpan.Zero) return; // stays until closed
         var timer = _dispatcher!.CreateTimer();
         timer.Interval = duration ?? TimeSpan.FromSeconds(logType is LogEntryType.Info ? 5 : 10);
         timer.IsRepeating = false;

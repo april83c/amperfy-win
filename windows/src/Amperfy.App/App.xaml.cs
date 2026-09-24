@@ -37,11 +37,13 @@ public partial class App : Application
         Services.Player.PlayerUiService.Initialize(_window);
         _window.Closed += (_, _) =>
         {
+            UpdateService.Stop();
             SettingsBootstrap.Shutdown();
             services.Shutdown();
         };
         _window.Activate();
         CrashLog.Write("Window activated");
+        UpdateService.Start();
         HandleActivation(AppInstance.GetCurrent().GetActivatedEventArgs());
     }
 

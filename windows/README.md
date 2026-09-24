@@ -41,8 +41,14 @@ implementation. `docs/PORTING.md` explains why the port uses C# rather than Swif
 Not ported, because Windows has no equivalent: CarPlay, Siri/App Intents, Apple Watch, haptics and swipe gestures. Context menus and keyboard shortcuts replace the swipe gestures.
 
 ## Install
-Download `Amperfy-win-x64.zip` or `Amperfy-win-arm64.zip` from a release, or the `Amperfy-win-x64` / `Amperfy-win-arm64` artifact of a CI run. Unzip it and start `Amperfy.exe`; no installer is needed.
-- Requires the [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) for the matching architecture (x64 or Arm64). If it's missing, Windows shows a prompt with a download link. The Windows App SDK is bundled with the app.
+- **Installer (recommended):** download `AmperfyWin-win-x64-Setup.exe` (or `AmperfyWin-win-arm64-Setup.exe` for ARM devices) from the [latest release](https://github.com/april83c/amperfy-win/releases/latest) and run it.
+  - It installs per user to `%LOCALAPPDATA%\AmperfyWin`, without admin rights; the app data stays in `%LOCALAPPDATA%\Amperfy`.
+  - It sets up the .NET 10 Runtime if it's missing.
+  - The installed app updates itself: it checks the GitHub releases after start and every few hours, downloads a new version in the background, and installs it when you close Amperfy or click "Restart now". You can also check manually in Settings > About.
+- **Portable:** `AmperfyWin-win-x64-Portable.zip` / `AmperfyWin-win-arm64-Portable.zip` from a release, or the `Amperfy-win-x64` / `Amperfy-win-arm64` artifact of a CI run.
+  - Unzip and start `Amperfy.exe`. CI artifacts don't update themselves.
+  - These need the [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) for the matching architecture; if it's missing, Windows shows a prompt with a download link.
+- The Windows App SDK is bundled.
 - Requires Windows 10 version 2004 (build 19041) or later, or Windows 11.
 
 Data is stored in `%LOCALAPPDATA%\Amperfy`: the database, settings, cache and `logs\amperfy.log`. Passwords are encrypted with DPAPI for the current Windows user.
@@ -53,7 +59,14 @@ dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 
 ```
 This needs the .NET 10 SDK on Windows; no Visual Studio workload is required. For ARM64, use `-r win-arm64 -p:Platform=ARM64`.
 
-To publish a release, run the `Windows release` workflow (manually with a tag, or by pushing a `win-v*` tag). It builds zips for x64 and ARM64 and attaches them to a GitHub release.
+To publish a release, push a tag (e.g. `git tag v2.0.1 && git push origin v2.0.1`). The `Windows release` workflow then:
+- builds x64 and ARM64 with that version;
+- packs them with [Velopack](https://velopack.io) (installer, portable zip, full and delta update packages; channels `win-x64` / `win-arm64`);
+- publishes a GitHub release.
+
+The installed apps update from these releases. Tags with a suffix (e.g. `v2.1.0-beta.1`) become pre-releases, which installed apps don't update to.
+
+Updates download from the public release URLs without credentials, so the repository must be public for the installer link and self-updates to work.
 
 ## Development
 | Path | Content |

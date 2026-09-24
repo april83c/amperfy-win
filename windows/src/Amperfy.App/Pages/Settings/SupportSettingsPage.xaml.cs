@@ -9,7 +9,8 @@ namespace Amperfy.App.Pages.Settings;
 /// (LogData, the iOS mail attachment) and the log files.
 public sealed partial class SupportSettingsPage : Page
 {
-    public const string IssuesUrl = "https://github.com/BLeeEZ/amperfy/issues";
+    // issues of this Windows port (not of the original Amperfy project, which is not affiliated)
+    public const string IssuesUrl = UpdateService.RepositoryUrl + "/issues";
 
     private readonly AppServices _services = AppServices.Instance;
 
