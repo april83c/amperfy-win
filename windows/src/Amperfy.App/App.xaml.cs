@@ -34,6 +34,7 @@ public partial class App : Application
         SettingsBootstrap.Initialize(services);
         _window = new MainWindow();
         services.MainWindow = _window;
+        Services.Player.PlayerUiService.Initialize(_window);
         _window.Closed += (_, _) =>
         {
             SettingsBootstrap.Shutdown();

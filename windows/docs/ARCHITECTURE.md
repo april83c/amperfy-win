@@ -79,3 +79,20 @@ files), `Amperfy.Core.Api` (+ `.Subsonic`, `.Ampache`), `Amperfy.Core.Downloads`
 * XML samples live in `tests/Amperfy.Core.Tests/Samples/{Subsonic,Ampache}/` (copied to output).
 * `Helper/TestStorage` creates an in-memory database + test account.
 * Async tests that touch storage: `SingleThreadSynchronizationContext.Run(async () => { ... })`.
+
+## Audio output (Windows app)
+
+`Services/Audio` implements the core's `IAudioStreamingPlayer` and `ISystemMediaControls`; `AudioBackend` creates both.
+
+| Feature | Support |
+|---|---|
+| Engine | `WindowsAudioEngine` picks an engine for each `Play`. `MediaPlayerAudioEngine` (Windows.Media.Playback) is the default. `AudioGraphAudioEngine` plays entries started while the EQ is active; `Queue` stays on the active engine. |
+| Gapless | MediaPlayer: `MediaPlaybackList`; `Play` replaces the list and `Queue` appends to it. AudioGraph: the next input node is prepared and started from the audio thread. Transitions raise `DidFinishPlaying(old)` and `DidStartPlaying(new)`, keyed by the URL exactly as passed. |
+| Custom HTTP headers | Headers can't be passed to Media Foundation. With headers, the stream is read through `HttpRangeStream` (range requests), wrapped as an `IRandomAccessStream`. This needs a known length; otherwise the plain URI is played without the headers and a warning is logged. |
+| Cached files | `file://` URLs open through `StorageFile`. A file with an unknown extension opens as a stream with the MIME type. |
+| Radio / ICY | Live streams (the playing or next queue item is a `Radio` with that URL) are always played by MediaPlayer. `IcyMetadataPoller` (core) reads `StreamTitle` about every 15 s over a separate connection, reading one metadata block per poll, and raises `DidReadMetadata`. SHOUTcast v1 "ICY 200 OK" responses are rejected by HttpClient, so those stations show no title. |
+| Replay gain | MediaPlayer: `Volume = volume * min(replayGain, 1)`, so boosts (gain > 1) are clipped. AudioGraph: the input node gain, which can be > 1. |
+| EQ | The 10-band EQ needs the AudioGraph path: 3 built-in `EqualizerEffectDefinition`s with 4 bands each (10 used, 1 octave, ±18 dB range) on a submix node. Unpackaged apps can't register custom `IBasicAudioEffect`s, so there is no EQ on the MediaPlayer path. Turning the EQ on applies from the next started track; changing the gains applies immediately. |
+| AudioGraph limits | It is bound to the default output device at creation: a device change raises an error and the player restarts the engine. The rate uses `PlaybackSpeedFactor`, which may change the pitch. If the graph or an input node can't be created, playback falls back to MediaPlayer (`PlaybackUnsupported`). |
+| System media controls | The SMTC of a dedicated, never-playing `MediaPlayer` with its `CommandManager` disabled (manual control). It provides metadata, a thumbnail (artwork file, or the app icon), the timeline, shuffle, repeat and rate. Buttons and requests are posted to the main thread. The playback engines disable their own SMTC integration. |
+

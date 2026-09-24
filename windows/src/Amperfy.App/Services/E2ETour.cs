@@ -116,9 +116,54 @@ public static class E2ETour
         _ = shell;
     }
 
-    /// Player related steps (extended when the player UI exists).
+    /// Player related steps: play the first album (player bar), queue pane, lyrics pane, now playing page and the
+    /// mini player window (captured separately, as it is its own window).
     private static IEnumerable<(string Name, Func<Task> Action)> PlayerSteps(AppServices services)
     {
-        yield break;
+        var nav = services.Navigation;
+        yield return ("player-bar", async () =>
+        {
+            if (services.ActiveAccount is not { } account) return;
+            var album = services.Library.GetAlbums(account).FirstOrDefault(a => a.SongCount > 0)
+                        ?? services.Library.GetAlbums(account).FirstOrDefault();
+            if (album is null) return;
+            if (album.Songs.Count == 0)
+            {
+                try { await services.Kit.GetMeta(account.Info).LibrarySyncer.SyncAsync(album); }
+                catch (Exception ex) { CrashLog.Write($"E2E album sync failed: {ex.Message}"); }
+            }
+            services.Player.Play(new Amperfy.Core.Player.PlayContext(album));
+            try
+            {
+                await WaitUntil(() => services.Player.IsPlaying && services.Player.ElapsedTime > 0.5, TimeSpan.FromSeconds(20));
+            }
+            catch (TimeoutException)
+            {
+                CrashLog.Write($"E2E: playback did not start (playing: {services.Player.IsPlaying}, item: {services.Player.CurrentlyPlaying?.Title})");
+            }
+        });
+        yield return ("player-queue", () =>
+        {
+            Player.PlayerUi.ShowQueuePane(true);
+            return Task.CompletedTask;
+        });
+        yield return ("player-lyrics", () =>
+        {
+            Player.PlayerUi.ShowLyricsPane(true);
+            return Task.CompletedTask;
+        });
+        yield return ("player-now-playing", () =>
+        {
+            Player.PlayerUi.ShowLyricsPane(false);
+            nav.Navigate(typeof(NowPlayingPage));
+            return Task.CompletedTask;
+        });
+        yield return ("player-mini", async () =>
+        {
+            var mini = Controls.Player.MiniPlayerWindow.Show(minimizeMainWindow: false);
+            await Task.Delay(2500);
+            if (ScreenshotTour.FromCommandLine() is { } tour) await tour.CaptureAsync(mini, "player-mini-window");
+            mini.Close();
+        });
     }
 }

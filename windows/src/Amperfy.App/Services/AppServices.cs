@@ -90,5 +90,6 @@ public sealed class AppServices
     public void Shutdown()
     {
         try { Kit.Dispose(); } catch (Exception ex) { CrashLog.Write($"Shutdown: {ex}"); }
+        try { AudioBackend.Shutdown(); } catch (Exception ex) { CrashLog.Write($"Audio shutdown: {ex}"); }
     }
 }
