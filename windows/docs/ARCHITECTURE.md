@@ -48,6 +48,9 @@ Swift uses `@MainActor` + CoreData main context. The C# port mirrors that:
 * `Playlist` keeps items ordered by `PlaylistItem.Order` (Swift `orderDistance` algorithm).
 * Queries: `LibraryStorage` (`Storage/LibraryStorage*.cs`, `partial`). Add new queries in a new
   partial file of your area (e.g. `Storage/LibraryStorage.Downloads.cs`) to avoid merge conflicts.
+* **Queries only see saved data** (unlike CoreData fetches, which include unsaved changes). Call
+  `library.SaveContext()` before querying for entities you just created/changed. Navigation
+  properties and the prefetch dictionaries do see unsaved objects.
 * Prefetch (Swift `PrefetchIdContainer` / `getElements`): `LibraryStorage.GetElements(account, ids)`.
 * Swift `NSManagedObjectID` references between contexts are not needed (single context).
 * Container identifiers: `PlayableContainerIdentifier(type, Pk.ToString())`.
