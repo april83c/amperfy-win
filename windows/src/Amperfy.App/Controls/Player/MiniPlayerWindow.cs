@@ -83,6 +83,9 @@ public sealed partial class MiniPlayerWindow : Window
         var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2, Margin = new Thickness(12, 0, 4, 0) };
         texts.Children.Add(_title);
         texts.Children.Add(_artist);
+        _artwork.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
+        texts.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent); // hit testable for the context menu
+        texts.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
 
         _pin = PlayerUi.CreateToggleButton(PlayerGlyphs.Pin, "Always on top", TogglePin, 32, 14);
         var openMain = PlayerUi.CreateIconButton(PlayerGlyphs.OpenMainWindow, "Open main window", () =>

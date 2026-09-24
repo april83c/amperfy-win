@@ -556,6 +556,11 @@ public static class PlayerUi
         {
             yield return MenuItem("Clear Context Queue", Amperfy.App.Helpers.Icons.Delete, ClearContextQueue);
         }
+        if (player.PlayerMode == PlayerMode.Music && Services.Settings.User.IsOnlineMode &&
+            (player.CurrentlyPlaying is not null || player.PrevQueueCount > 0 || player.NextQueueCount > 0))
+        {
+            yield return MenuItem("Add Context Queue to Playlist", Amperfy.App.Helpers.Icons.Playlist, () => _ = AddContextQueueToPlaylistAsync());
+        }
         yield return new MenuFlyoutSeparator();
         yield return CreateSleepTimerMenuItem();
         yield return CreatePlaybackRateMenuItem();
@@ -587,6 +592,21 @@ public static class PlayerUi
         yield return new MenuFlyoutSeparator();
         yield return MenuItem("Player Info", Amperfy.App.Helpers.Icons.Info, () => _ = ShowPlayerInfoAsync());
     }
+
+    /// Swift "Add Context Queue to Playlist": previous items, the current song and the next items (songs of one
+    /// account) to a playlist.
+    public static async Task AddContextQueueToPlaylistAsync()
+    {
+        var songs = PlayerQueueUtil.ContextQueueSongsForPlaylist(Player);
+        if (songs.Count == 0 || songs[0].Account is not { } account) return;
+        await Amperfy.App.Library.Dialogs.AddToPlaylistDialog.ShowAsync(account, songs);
+    }
+
+    /// Context menu of the currently playing item (Swift MiniPlayerView: the entity menu of the current item).
+    public static MenuFlyout CreateCurrentItemFlyout() => Amperfy.App.Library.EntityActions.CreateMenuFlyout(() =>
+        Player.CurrentlyPlaying is { } playable
+            ? (playable, new Amperfy.App.Library.EntityActionOptions { Changed = NotifyUiStateChanged })
+            : null);
 
     private static MenuFlyoutItem MenuItem(string text, string glyph, Action action)
     {

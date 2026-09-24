@@ -13,7 +13,7 @@ using Windows.System;
 namespace Amperfy.App.Pages;
 
 /// Large player view (port of PopupPlayerVC + LargeCurrentlyPlayingPlayerView + PlayerControlView): big artwork,
-/// title/artist/album (links to the album/artist pages), favorite, transport controls with seek bar and audio info,
+/// title/artist/album (links to the album/artist pages), favorite, star rating, transport controls with seek bar and audio info,
 /// playback rate, sleep timer, mode, volume and the queue / lyrics next to it. Escape closes it.
 public sealed partial class NowPlayingPage : Page
 {
@@ -24,6 +24,8 @@ public sealed partial class NowPlayingPage : Page
     private readonly PlayerTransportControls _transport;
     private readonly Button _favorite;
     private readonly Button _mode;
+    private readonly RatingControl _rating;
+    private bool _isUpdatingRating;
     private readonly ToggleButton _queueTab;
     private readonly ToggleButton _lyricsTab;
     private readonly QueueView _queueView;
@@ -40,6 +42,16 @@ public sealed partial class NowPlayingPage : Page
 
         _favorite = PlayerUi.CreateIconButton(Icons.Heart, "Favorite", () => _ = ToggleFavoriteAsync(), 44, 20);
         FavoriteHost.Child = _favorite;
+
+        // star rating of the current song (Swift LargeCurrentlyPlayingPlayerView.ratingView; Display > Show Star Rating)
+        _rating = new RatingControl { IsClearEnabled = true, Caption = "", HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 4, 0, 0) };
+        _rating.ValueChanged += (_, _) => OnRatingChanged();
+        ToolTipService.SetToolTip(_rating, "Rating");
+        InfoPanel.Children.Add(_rating);
+
+        // right click on the artwork / title: context menu of the current item
+        Artwork.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
+        TitleButton.ContextFlyout = PlayerUi.CreateCurrentItemFlyout();
 
         _transport = new PlayerTransportControls(TransportSize.Large, showsSeekBar: true, showsShuffleRepeat: true, showsAudioInfo: true);
         TransportHost.Child = _transport;
@@ -152,6 +164,29 @@ public sealed partial class NowPlayingPage : Page
         Refresh();
     }
 
+    private void RefreshRating(AbstractPlayable? playable)
+    {
+        if (!_services.Settings.User.IsShowRating || playable?.AsSong is not { } song)
+        {
+            _rating.Visibility = Visibility.Collapsed;
+            return;
+        }
+        _rating.Visibility = Visibility.Visible;
+        // offline: display only
+        _rating.IsReadOnly = _services.Settings.User.IsOfflineMode;
+        _isUpdatingRating = true;
+        _rating.Value = song.Rating > 0 ? song.Rating : -1;
+        _isUpdatingRating = false;
+    }
+
+    private void OnRatingChanged()
+    {
+        if (_isUpdatingRating || PlayerUi.Player.CurrentlyPlaying?.AsSong is not { } song) return;
+        var value = Math.Max(0, (int)Math.Round(_rating.Value));
+        if (value == song.Rating) return;
+        _ = Amperfy.App.Library.EntityActions.SetRatingAsync(song, value, Refresh);
+    }
+
     private void UpdateLayoutForSize()
     {
         var isNarrow = ActualWidth < NarrowWidth;
@@ -196,6 +231,8 @@ public sealed partial class NowPlayingPage : Page
         {
             _favorite.Visibility = Visibility.Collapsed;
         }
+
+        RefreshRating(playable);
 
         var isMusic = player.PlayerMode == PlayerMode.Music;
         _mode.Visibility = PlayerUi.IsPlayerModeSwitchVisible ? Visibility.Visible : Visibility.Collapsed;
