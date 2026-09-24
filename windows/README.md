@@ -1,6 +1,6 @@
 # Amperfy for Windows
 
-A native Windows port of [Amperfy](../README.md), the Subsonic/Navidrome/Ampache music player, in
+A native Windows port of [Amperfy](https://github.com/BLeeEZ/amperfy), the Subsonic/Navidrome/Ampache music player, in
 C# / .NET 10 with WinUI 3 (Windows App SDK). The Swift app in the repository root is the reference
 implementation. `docs/PORTING.md` explains why the port uses C# rather than Swift on Windows.
 
