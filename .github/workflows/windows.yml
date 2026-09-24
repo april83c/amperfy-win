@@ -1,0 +1,54 @@
+name: Windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'windows/**'
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test core
+        run: dotnet test windows/tests/Amperfy.Core.Tests/Amperfy.Core.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+  app:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish app (x64)
+        run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 -p:Platform=x64 -o out/Amperfy-win-x64
+      - name: Smoke test (launch + screenshot)
+        shell: pwsh
+        run: windows/build/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amperfy-win-x64
+          path: out/Amperfy-win-x64
+          retention-days: 14
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: out/smoke
+          retention-days: 7

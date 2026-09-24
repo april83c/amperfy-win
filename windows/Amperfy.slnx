@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Amperfy.Core/Amperfy.Core.csproj" />
+    <Project Path="src/Amperfy.App/Amperfy.App.csproj">
+      <Platform Solution="Any CPU" Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Amperfy.Core.Tests/Amperfy.Core.Tests.csproj" />
+  </Folder>
+</Solution>
