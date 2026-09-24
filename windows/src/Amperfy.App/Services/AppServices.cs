@@ -53,6 +53,7 @@ public sealed class AppServices
         };
         kit.UserStatistics.SessionStarted();
         SystemIntegration.InitializeToasts(kit.LocalNotificationManager);
+        SystemIntegration.RegisterProtocol();
         return Instance;
     }
 

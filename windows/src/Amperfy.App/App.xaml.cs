@@ -3,6 +3,8 @@ using Amperfy.Core.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.AppNotifications;
+using IProtocolActivatedEventArgs = Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs;
+using ILaunchActivatedEventArgs = Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs;
 
 namespace Amperfy.App;
 
@@ -55,6 +57,15 @@ public partial class App : Application
             if (args.Kind == ExtendedActivationKind.AppNotification && args.Data is AppNotificationActivatedEventArgs toast)
             {
                 SystemIntegration.HandleToastActivation(new Dictionary<string, string>(toast.Arguments));
+            }
+            else if (args.Kind == ExtendedActivationKind.Protocol && args.Data is IProtocolActivatedEventArgs protocol)
+            {
+                SystemIntegration.HandleCommandUrl(protocol.Uri);
+            }
+            else if (args.Kind == ExtendedActivationKind.Launch && args.Data is ILaunchActivatedEventArgs launch &&
+                     SystemIntegration.FindCommandUrl(launch.Arguments) is { } url)
+            {
+                SystemIntegration.HandleCommandUrl(url);
             }
         }
         catch (Exception ex)
