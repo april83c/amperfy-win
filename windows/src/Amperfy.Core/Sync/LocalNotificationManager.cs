@@ -66,6 +66,7 @@ public sealed class LocalNotificationManager : ILocalNotificationManager
 
     public void Notify(PodcastEpisode podcastEpisode)
     {
+        if (!_settings.User.IsPodcastNotificationsEnabled) return;
         if (podcastEpisode.Account is not { } account) return;
         var identifier = $"account-{account.Ident}-podcast-{podcastEpisode.Podcast?.Id ?? "0"}-episode-{podcastEpisode.Id}";
         string? imagePath = null;
