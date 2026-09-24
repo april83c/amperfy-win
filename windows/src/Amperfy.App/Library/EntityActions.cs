@@ -35,7 +35,8 @@ public sealed class EntityActionOptions
 
 /// Context menu actions of library entities (port of EntityPreviewActionBuilder and
 /// CommonScreenOperations): play, shuffle, instant mix, queue, navigation, lyrics, descriptions,
-/// favorite, rating, add to playlist, download, delete cache, delete on server, go to site, copy id.
+/// favorite, rating, add to playlist, download, delete cache, delete on server, share / save a copy, go to site,
+/// copy id.
 /// Also provides navigation helpers to open the detail page of an entity.
 public static class EntityActions
 {
@@ -170,6 +171,11 @@ public static class EntityActions
         if (container.Playables.HasCachedItems()) elementActions.Add(Ui.MenuItem("Delete Cache", Icons.Delete, () => _ = DeleteCacheAsync(container, options.Changed)));
         if (config.IsDeleteOnServer && container is PodcastEpisode deleteEpisode)
             elementActions.Add(Ui.MenuItem("Delete on Server", LibraryGlyphs.CloudDelete, () => _ = DeleteEpisodeOnServerAsync(deleteEpisode, options.Changed)));
+        if (PlayableShare.IsShareable(container) && container is AbstractPlayable sharePlayable)
+        {
+            elementActions.Add(Ui.MenuItem("Share\u2026", Icons.Share, () => _ = PlayableShare.ShareAsync(sharePlayable)));
+            elementActions.Add(Ui.MenuItem("Save a Copy\u2026", LibraryGlyphs.Save, () => _ = PlayableShare.SaveCopyAsync(sharePlayable)));
+        }
         if (config.IsGoToSiteUrl && container is Radio { SiteUrl: { Length: > 0 } siteUrl })
             elementActions.Add(Ui.MenuItem("Go to Site", LibraryGlyphs.Globe, () => _ = OpenUrlAsync(siteUrl)));
         groups.Add(elementActions);
