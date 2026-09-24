@@ -42,6 +42,8 @@ jobs:
       - name: Smoke test (launch + screenshot)
         shell: pwsh
         run: ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
+      - name: Install a virtual audio device (the runner has none; needed for playback)
+        uses: LABSN/sound-ci-helpers@v1
       - name: E2E screenshot tour against Navidrome (login, sync, all pages)
         shell: pwsh
         env:
