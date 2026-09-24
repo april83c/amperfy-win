@@ -472,6 +472,7 @@ public sealed class SubsonicServerApi : IUrlCleanser
 
     public ResponseError? CheckForErrorResponse(ApiDataResponse response)
     {
+        if (!GenericXmlParser.LooksLikeXml(response.Data)) return null;
         var errorParser = new SsXmlParser();
         errorParser.Parse(response.Data);
         if (errorParser.Error is not { } subsonicError) return null;

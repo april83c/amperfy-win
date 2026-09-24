@@ -57,3 +57,18 @@ public class HttpRangeStreamTest
         }
     }
 }
+
+public class XmlSniffingTest
+{
+    [Theory]
+    [InlineData("<subsonic-response/>", true)]
+    [InlineData("  \r\n<?xml version=\"1.0\"?><a/>", true)]
+    [InlineData("ID3\u0003", false)]
+    [InlineData("", false)]
+    public void LooksLikeXml(string text, bool expected) =>
+        Assert.Equal(expected, Amperfy.Core.Api.GenericXmlParser.LooksLikeXml(System.Text.Encoding.UTF8.GetBytes(text)));
+
+    [Fact]
+    public void LooksLikeXml_WithBom() =>
+        Assert.True(Amperfy.Core.Api.GenericXmlParser.LooksLikeXml([0xEF, 0xBB, 0xBF, (byte)'<', (byte)'a', (byte)'/', (byte)'>']));
+}

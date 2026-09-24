@@ -418,6 +418,7 @@ public sealed class AmpacheXmlServerApi : IUrlCleanser
 
     public ResponseError? CheckForErrorResponse(ApiDataResponse response)
     {
+        if (!GenericXmlParser.LooksLikeXml(response.Data)) return null;
         var errorParser = new AmpacheXmlParser();
         errorParser.Parse(response.Data);
         if (errorParser.Error is not { } ampacheError) return null;

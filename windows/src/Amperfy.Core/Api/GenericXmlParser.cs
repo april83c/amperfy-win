@@ -78,6 +78,20 @@ public abstract class GenericXmlParser
 
     public Exception? ParserError { get; private set; }
 
+    /// True if the data could be an XML document (first non-whitespace character after an optional
+    /// UTF-8 BOM is '<'). Used to skip error-response checks on binary downloads (songs, images).
+    public static bool LooksLikeXml(byte[] data)
+    {
+        var i = data.Length >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF ? 3 : 0;
+        for (; i < data.Length; i++)
+        {
+            var b = data[i];
+            if (b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n') continue;
+            return b == (byte)'<';
+        }
+        return false;
+    }
+
     private void EndElement(string name)
     {
         DidEndElement(name);
