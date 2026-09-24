@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.AlbumsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <TextBlock x:Name="Header" Margin="24" Style="{StaticResource TitleTextBlockStyle}" />
+</Page>

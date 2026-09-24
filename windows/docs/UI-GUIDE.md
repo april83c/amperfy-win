@@ -61,6 +61,7 @@ The XAML compiler runs only in the Windows CI build. `scripts/linux-check.sh` co
 - **Resources:** `StaticResource` keys must exist in WinUI's generic theme or in `App.xaml` merged dictionaries. Put new shared styles in `Styles/*.xaml` and merge them in `App.xaml`.
 - **`ListView` / `GridView`:** set `SelectionMode="None"` with `IsItemClickEnabled="True"` for navigation lists.
   - For context menus, use `ContextFlyout` on the item template root, or handle `RightTapped` / `ContextRequested` in code.
+- **Pages need a XAML file:** every type passed to `Frame.Navigate` must be a XAML page (`.xaml` + `.xaml.cs`), so that the XAML compiler generates its type metadata. Navigating to a code-only `Page` subclass crashes the process natively.
 - **Community toolkit:** CommunityToolkit.WinUI controls available: `SettingsCard`, `SettingsExpander` (`xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"`), `Segmented`.
 
 ## Verifying changes

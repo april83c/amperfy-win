@@ -8,15 +8,15 @@ using Microsoft.UI.Xaml.Navigation;
 namespace Amperfy.App.Pages;
 
 /// Placeholder (to be implemented).
-public sealed partial class AlbumsPage : Page, ILibraryCategoryPage
+public sealed partial class DownloadsPage : Page, ILibraryCategoryPage
 {
-    private readonly TextBlock Header = new() { Text = "Albums", Margin = new Thickness(24), Style = (Style)Application.Current.Resources["TitleTextBlockStyle"] };
 
     public LibraryDisplayType LibraryType { get; private set; }
 
-    public AlbumsPage()
+    public DownloadsPage()
     {
-        Content = Header;
+        InitializeComponent();
+        Header.Text = "Downloads";
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

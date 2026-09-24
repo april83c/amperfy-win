@@ -14,6 +14,7 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        XamlCheckProcessRequirements();
         ComWrappersSupport.InitializeComWrappers();
         if (IsRedirected()) return 0;
         Application.Start(p =>
@@ -24,6 +25,9 @@ public static class Program
         });
         return 0;
     }
+
+    [System.Runtime.InteropServices.DllImport("Microsoft.ui.xaml.dll")]
+    private static extern void XamlCheckProcessRequirements();
 
     private static bool IsRedirected()
     {
