@@ -1,0 +1,96 @@
+namespace Amperfy.Core.Api.Ampache;
+
+/// Parses playlists (without songs). Without a playlist to validate, local playlists that are no
+/// longer on the server are deleted.
+public sealed class PlaylistParserDelegate : AmpacheNotifiableXmlParser
+{
+    private const string LogCategory = "Ampache";
+
+    private Playlist? _playlist;
+    private readonly Playlist? _playlistToValidate;
+    private readonly Dictionary<string, Playlist> _playlistsDict = [];
+    private readonly HashSet<Playlist> _allOldPlaylists;
+    private readonly HashSet<Playlist> _parsedPlaylists = [];
+    private readonly Account _account;
+    private readonly LibraryStorage _library;
+
+    public PlaylistParserDelegate(Account account, LibraryStorage library, IParsedObjectNotifiable? parseNotifier, Playlist? playlistToValidate = null)
+        : base(parseNotifier)
+    {
+        _account = account;
+        _library = library;
+        _playlist = playlistToValidate;
+        _playlistToValidate = playlistToValidate;
+        _allOldPlaylists = [.. library.GetPlaylists(account)];
+        foreach (var pl in _allOldPlaylists) _playlistsDict[pl.Id] = pl;
+    }
+
+    private void ResetPlaylistInCaseOfError()
+    {
+        if (_playlist is null) return;
+        AmperfyLog.Error(LogCategory, "Error: Playlist has been removed on server -> local id reset");
+        _playlist.Id = "";
+        _playlist = null;
+    }
+
+    protected override void DidStartElement(string elementName, IReadOnlyDictionary<string, string> attributes)
+    {
+        base.DidStartElement(elementName, attributes);
+        if (elementName != "playlist") return;
+        if (!attributes.TryGetValue("id", out var playlistId))
+        {
+            AmperfyLog.Error(LogCategory, "Error: Playlist could not be parsed -> id is not given");
+            ResetPlaylistInCaseOfError();
+            return;
+        }
+        if (_playlist is not null)
+        {
+            _playlist.Id = playlistId;
+        }
+        else if (playlistId != "")
+        {
+            if (_playlistsDict.TryGetValue(playlistId, out var fetchedPlaylist))
+            {
+                _playlist = fetchedPlaylist;
+            }
+            else
+            {
+                _playlist = _library.CreatePlaylist(_account);
+                _playlist.Id = playlistId;
+                _playlistsDict[playlistId] = _playlist;
+            }
+        }
+        else
+        {
+            AmperfyLog.Error(LogCategory, "Error: Playlist could not be parsed -> id is not given");
+        }
+    }
+
+    protected override void DidEndElement(string elementName)
+    {
+        switch (elementName)
+        {
+            case "name":
+                if (_playlist is not null) _playlist.Name = Buffer;
+                break;
+            case "items":
+                if (_playlist is not null) _playlist.RemoteSongCount = BufferIntOrZero;
+                break;
+            case "playlist":
+                if (_playlist is { } parsedPlaylist) _parsedPlaylists.Add(parsedPlaylist);
+                _playlist = null;
+                ParseNotifier?.NotifyParsedObject(ParsedObjectType.Playlist);
+                break;
+            case "root":
+                if (_playlistToValidate is null)
+                {
+                    foreach (var outdated in _allOldPlaylists.Except(_parsedPlaylists).ToList())
+                    {
+                        if (outdated.Id != "") _library.DeletePlaylist(outdated);
+                    }
+                }
+                break;
+        }
+        base.DidEndElement(elementName);
+    }
+}
