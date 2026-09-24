@@ -100,6 +100,8 @@ public class BrowseQueriesTest : IDisposable
         var page = q.Skip(10).Take(10).ToList();
         Assert.Equal(10, page.Count);
         Assert.Equal("Song 14", page[0].Title);
+        var random = LibraryStorage.TakeRandom(q, 5);
+        Assert.Equal(5, random.Distinct().Count());
     }
 
     [Fact]

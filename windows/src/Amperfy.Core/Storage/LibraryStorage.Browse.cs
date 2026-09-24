@@ -90,6 +90,9 @@ public sealed partial class LibraryStorage
     public static IQueryable<PodcastEpisode> SortEpisodesByPublishDate(IQueryable<PodcastEpisode> q) =>
         q.OrderByDescending(e => e.PublishDateRaw).ThenBy(e => e.Id);
 
+    /// Random elements of a query (header "Shuffle" of big lists).
+    public static List<T> TakeRandom<T>(IQueryable<T> q, int count) => q.OrderBy(_ => EF.Functions.Random()).Take(count).ToList();
+
     // --- section index (jump to letter) ----------------------------------------------------------
 
     /// Distinct alphabetic section initials of the (unsorted or sorted) query, ordered.
