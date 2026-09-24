@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.Settings.DisplaySettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <ScrollViewer>
+        <StackPanel MaxWidth="1000" Margin="24,0,24,24" Spacing="4">
+            <TextBlock Margin="1,0,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Appearance" />
+            <toolkit:SettingsCard Header="Appearance" Description="Light or dark mode. System follows the Windows setting.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE706;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox x:Name="AppearanceCombo" MinWidth="200" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard
+                x:Name="ThemeColorCard"
+                Header="Theme Color"
+                Description="The accent color is set per account in the account settings."
+                IsClickEnabled="True">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE790;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Lists" />
+            <toolkit:SettingsCard Header="Detailed Information" Description="Display detailed information (bitrate, ID) and the command &quot;Copy ID to Clipboard&quot;.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE946;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="DetailedInfoToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Song Duration" Description="Display the song duration in list rows.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xEC4F;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="SongDurationToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Album Duration" Description="Display the album duration in list rows.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE93C;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="AlbumDurationToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Artist Duration" Description="Display the artist duration in list rows.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE77B;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="ArtistDurationToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Show Star Rating" Description="Display the star rating in song rows and the currently playing view.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE734;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="RatingToggle" />
+            </toolkit:SettingsCard>
+
+            <TextBlock Margin="1,24,0,4" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Player" />
+            <toolkit:SettingsCard Header="Music Player Skip Buttons" Description="Add skip forward and skip backward buttons to the music player, along with the previous/next buttons.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xED3D;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="SkipButtonsToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Disable Player Shuffle Button" Description="The player shuffle button is displayed but non-interactive.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8B1;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="DisableShuffleToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard
+                x:Name="LyricsScrollingCard"
+                Header="Lyrics Smooth Scrolling"
+                Description="Lyrics are smoothly scrolled to the next line. Deactivating will result in jumping from line to line.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8D2;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="LyricsScrollingToggle" />
+            </toolkit:SettingsCard>
+            <toolkit:SettingsCard Header="Mini Player Always on Top" Description="Keep the mini player window floating above all other windows.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8A7;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch x:Name="MiniPlayerOnTopToggle" />
+            </toolkit:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
