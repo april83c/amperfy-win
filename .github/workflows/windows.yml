@@ -27,6 +27,26 @@ jobs:
       - name: Test core
         run: dotnet test windows/tests/Amperfy.Core.Tests/Amperfy.Core.Tests.csproj -c Release --logger "console;verbosity=normal"
 
+  integration:
+    # Core end-to-end tests (login, sync, browse, download, streaming) against a live Navidrome server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Start Navidrome with the test library
+        run: ./windows/scripts/start-navidrome-docker.sh windows/tests/TestLibrary 4533 admin amperfy-test
+      - name: Integration tests
+        env:
+          AMPERFY_IT_SERVER: http://127.0.0.1:4533
+          AMPERFY_IT_USER: admin
+          AMPERFY_IT_PASSWORD: amperfy-test
+        run: dotnet test windows/tests/Amperfy.Core.Tests/Amperfy.Core.Tests.csproj -c Release --filter "FullyQualifiedName~Integration" --logger "console;verbosity=normal"
+      - name: Navidrome log
+        if: failure()
+        run: docker logs navidrome | tail -100
+
   app:
     runs-on: windows-latest
     steps:
