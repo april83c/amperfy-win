@@ -37,6 +37,13 @@ public sealed partial class MainWindow : Window
     public event Action<string, bool>? SearchRequested;
     public event Action? PaneToggleRequested;
 
+    /// Restores (if minimized) and activates the window.
+    public void BringToFront()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } p) p.Restore();
+        Activate();
+    }
+
     public void ShowStartPage()
     {
         if (!_services.Kit.IsLoggedIn) ShowLogin();

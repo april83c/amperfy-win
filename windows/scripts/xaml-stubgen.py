@@ -131,7 +131,7 @@ def generate(xaml_path, out_dir, project_dir):
         lines.append("        private __StubBindings Bindings = new __StubBindings();")
         lines.append("        private sealed class __StubBindings { public void Update() { } public void Initialize() { } public void StopTracking() { } }")
     lines.append("    }")
-    if is_app:
+    if is_app and not os.path.exists(os.path.join(project_dir, "Program.cs")):
         lines.append("    public static class __StubProgram { public static void Main(string[] args) { } }")
     lines.append("}")
     rel = os.path.relpath(xaml_path, project_dir)
