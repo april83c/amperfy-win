@@ -63,6 +63,20 @@ The XAML compiler runs only in the Windows CI build. `scripts/linux-check.sh` co
   - For context menus, use `ContextFlyout` on the item template root, or handle `RightTapped` / `ContextRequested` in code.
 - **Community toolkit:** CommunityToolkit.WinUI controls available: `SettingsCard`, `SettingsExpander` (`xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"`), `Segmented`.
 
+## Library browsing UI (`Library/`, `Controls/Library/`)
+- **Context menus / actions:** `Library/EntityActions` (port of `EntityPreviewActionBuilder`).
+  - `EntityActions.CreateMenuFlyout(container, new EntityActionOptions { PlayContext, PlayerIndex, HostPageType, Changed, ExtraItems })` returns a `MenuFlyout` built when it opens (current favorite/rating/cache state, online/offline mode).
+  - The queue view passes `PlayerIndex` ("Play" jumps to the queue entry, no queue actions).
+  - Helpers: `Open(entity, scrollTo)` (detail page; songs play), `PlayContainerAsync`, `ToggleFavoriteAsync`, `SetRatingAsync`, `DownloadAsync`, `IsPlayable`, `PrefetchAsync`.
+  - `EntityActions.ShowLyricsHandler` (`Action<Song>`) replaces the default lyrics dialog.
+- **Rows / tiles:** code-built controls, used from XAML templates as `<controls:LibraryRow />` (picks `PlayableRow`, `PodcastEpisodeRow`, `EntityRow` or a section header) and `<controls:EntityTile />`.
+  - Items are `LibraryItem(entity, LibraryListContext, index)`; the context holds the play context provider, host page, display style.
+  - `LibraryListController` wires a ListView/GridView: click opens containers, double click / Enter plays, Shift+F10 context menu, `SetIncrementalSource(loader, count)` for big lists (`IncrementalItems`).
+- **Headers:** `LibraryPageHeader` (category pages: title, info, Play/Shuffle, filter box, command bar), `DetailHeader` + `DetailListToolbar` (detail pages).
+- **Dialogs:** `Library/Dialogs` (`AddToPlaylistDialog`, `PlaylistAddSongsDialog`, `HomeEditorDialog`, `DialogHelper`).
+- **Events:** `LibraryEventHub` (player changes, finished downloads, entity changes, offline mode); `ArtworkLoader.Request(entity)` downloads missing artworks and refreshes `ArtworkImage`s when done.
+- Theme brushes are not looked up in code (the app theme can differ from the application theme): secondary texts use `Ui.SecondaryOpacity`, accents `Ui.ThemeAccent`.
+
 ## Verifying changes
 - `./scripts/linux-check.sh` compiles the app's C# on Linux; it must end with `Build succeeded`.
 - `dotnet test tests/Amperfy.Core.Tests` runs the core tests.
