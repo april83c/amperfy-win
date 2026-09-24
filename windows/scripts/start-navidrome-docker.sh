@@ -9,7 +9,7 @@ PASSWORD="${4:-amperfy-test}"
 BASE="http://127.0.0.1:$PORT"
 
 docker run -d --name navidrome -p "$PORT:4533" -v "$MUSIC:/music:ro" \
-  -e ND_SCANNER_SCHEDULE=0 -e ND_LOGLEVEL=info deluan/navidrome:latest >/dev/null
+  -e ND_SCANNER_SCHEDULE=0 -e ND_LOGLEVEL=info deluan/navidrome:0.64.1 >/dev/null
 
 for i in $(seq 1 60); do
   curl -sf "$BASE/ping" >/dev/null && break

@@ -5,18 +5,23 @@ param(
   [Parameter(Mandatory = $true)][string]$WorkDir,
   [int]$Port = 4533,
   [string]$User = "admin",
-  [string]$Password = "amperfy-test"
+  [string]$Password = "amperfy-test",
+  # Pinned release: a direct download needs no (rate limited) GitHub API call
+  [string]$Version = "0.64.1"
 )
 $ErrorActionPreference = "Stop"
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 $WorkDir = (Resolve-Path $WorkDir).Path
 $MusicDir = (Resolve-Path $MusicDir).Path
 
-$release = Invoke-RestMethod -Uri "https://api.github.com/repos/navidrome/navidrome/releases/latest" -Headers @{ "User-Agent" = "amperfy-ci" }
-$asset = $release.assets | Where-Object { $_.name -like "*windows_amd64.zip" } | Select-Object -First 1
-Write-Host "Downloading $($asset.name)"
+$assetName = "navidrome_${Version}_windows_amd64.zip"
+$url = "https://github.com/navidrome/navidrome/releases/download/v$Version/$assetName"
+Write-Host "Downloading $url"
 $zip = Join-Path $WorkDir "navidrome.zip"
-Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip
+for ($i = 1; $i -le 3; $i++) {
+  try { Invoke-WebRequest -Uri $url -OutFile $zip; break }
+  catch { if ($i -eq 3) { throw }; Start-Sleep -Seconds (5 * $i) }
+}
 Expand-Archive -Path $zip -DestinationPath (Join-Path $WorkDir "bin") -Force
 $exe = Get-ChildItem (Join-Path $WorkDir "bin") -Recurse -Filter "navidrome.exe" | Select-Object -First 1
 
