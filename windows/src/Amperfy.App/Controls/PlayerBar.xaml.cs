@@ -60,6 +60,7 @@ public sealed partial class PlayerBar : UserControl
         Artwork.CornerRadius = new CornerRadius(6);
 
         _observer.AnyChanged += Refresh;
+        _observer.ArtworkChanged += RefreshArtwork;
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         SizeChanged += (_, _) => UpdateLayoutForWidth();
@@ -69,14 +70,18 @@ public sealed partial class PlayerBar : UserControl
     {
         _observer.Register().IsActive = true;
         PlayerUi.UiStateChanged += Refresh;
+        PlayerUi.CurrentArtworkChanged += RefreshArtwork;
         _services.Navigation.Navigated += Refresh;
         Refresh();
     }
+
+    private void RefreshArtwork() => Artwork.Refresh();
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _observer.IsActive = false;
         PlayerUi.UiStateChanged -= Refresh;
+        PlayerUi.CurrentArtworkChanged -= RefreshArtwork;
         _services.Navigation.Navigated -= Refresh;
     }
 
@@ -90,12 +95,11 @@ public sealed partial class PlayerBar : UserControl
     private void UpdateLayoutForWidth()
     {
         var width = ActualWidth;
-        var isMusic = PlayerUi.Player.PlayerMode == PlayerMode.Music;
         _rate.Visibility = width >= 1150 ? Visibility.Visible : Visibility.Collapsed;
         _sleep.Visibility = width >= 1150 ? Visibility.Visible : Visibility.Collapsed;
         _mode.Visibility = width >= 1000 && PlayerUi.IsPlayerModeSwitchVisible ? Visibility.Visible : Visibility.Collapsed;
         _miniPlayer.Visibility = width >= 900 ? Visibility.Visible : Visibility.Collapsed;
-        _lyrics.Visibility = width >= 800 && isMusic ? Visibility.Visible : Visibility.Collapsed;
+        _lyrics.Visibility = width >= 800 && (PlayerUi.IsLyricsAvailable || PlayerUi.IsLyricsPaneVisible) ? Visibility.Visible : Visibility.Collapsed;
         _volume.Visibility = width >= 700 ? Visibility.Visible : Visibility.Collapsed;
         _nowPlaying.Visibility = width >= 760 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -118,7 +122,6 @@ public sealed partial class PlayerBar : UserControl
         ToolTipService.SetToolTip(TitleButton, info.IsAlbumAvailable ? $"{info.Title}\nShow album" : info.Title);
         ToolTipService.SetToolTip(ArtistButton, info.IsArtistAvailable ? $"{info.Artist}\nShow artist" : info.Artist);
         if (!ReferenceEquals(Artwork.Entity, playable)) Artwork.Entity = playable;
-        else Artwork.Refresh();
 
         // favorite (songs) / radio web site
         if (playable is { IsFavoritable: true } && !_services.Settings.User.IsOfflineMode)

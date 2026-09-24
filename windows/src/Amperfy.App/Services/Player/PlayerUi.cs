@@ -2,6 +2,7 @@ using Amperfy.App.Controls.Player;
 using Amperfy.App.Pages;
 using Amperfy.App.Services.Audio;
 using Amperfy.Core.Common;
+using Amperfy.Core.Downloads;
 using Amperfy.Core.Model;
 using Amperfy.Core.Player;
 using Amperfy.Core.Storage;
@@ -61,6 +62,19 @@ public static class PlayerUi
 
     public static void NotifyUiStateChanged() => UiStateChanged?.Invoke();
 
+    /// The artwork of the currently playing item was downloaded.
+    public static event Action? CurrentArtworkChanged;
+
+    /// DownloadFinishedSuccess handler (registered by PlayerUiService).
+    internal static void OnDownloadFinished(NotificationArgs args)
+    {
+        if (args.Payload is not DownloadNotification notification || Services.PlayerComponents.Player.CurrentlyPlaying is not { } playable) return;
+        if (playable.UniqueId() == notification.Id || (playable.Artwork is { } artwork && artwork.UniqueId() == notification.Id))
+        {
+            CurrentArtworkChanged?.Invoke();
+        }
+    }
+
     // --- commands (PlayerUIHandler) -----------------------------------------------------------
 
     public static void TogglePlayPause() => Player.TogglePlayPause();
@@ -104,6 +118,10 @@ public static class PlayerUi
         Services.Settings.User.IsAutoplayEnabled = !Services.Settings.User.IsAutoplayEnabled;
         NotifyUiStateChanged();
     }
+
+    /// Lyrics are only provided by (Open)Subsonic servers (Swift isLyricsButtonAllowedToDisplay).
+    public static bool IsLyricsAvailable =>
+        Player.PlayerMode == PlayerMode.Music && Services.Settings.Accounts.AvailableApiTypes.Contains(ServerApiType.Subsonic);
 
     public static bool IsPlayerModeSwitchVisible => Player.PodcastItemCount > 0 || Player.PlayerMode == PlayerMode.Podcast;
 
@@ -536,7 +554,10 @@ public static class PlayerUi
         {
             yield return MenuItem("Scroll to currently playing", PlayerGlyphs.ScrollToCurrent, scrollToCurrent);
         }
-        yield return MenuItem(IsLyricsPaneVisible ? "Hide Lyrics" : "Show Lyrics", Amperfy.App.Helpers.Icons.Lyrics, ToggleLyricsPane);
+        if (IsLyricsAvailable || IsLyricsPaneVisible)
+        {
+            yield return MenuItem(IsLyricsPaneVisible ? "Hide Lyrics" : "Show Lyrics", Amperfy.App.Helpers.Icons.Lyrics, ToggleLyricsPane);
+        }
         yield return MenuItem(IsQueuePaneVisible ? "Hide Queue" : "Show Queue", Amperfy.App.Helpers.Icons.Queue, ToggleQueuePane);
         yield return MenuItem(MiniPlayerWindow.IsOpen ? "Close Mini Player" : "Open Mini Player", Amperfy.App.Helpers.Icons.MiniPlayer, ToggleMiniPlayer);
         yield return new MenuFlyoutSeparator();
@@ -612,6 +633,8 @@ public static class PlayerUi
             Width = size,
             Height = size,
             Padding = new Thickness(0),
+            // transparent when unchecked; the checked state of the template shows the accent fill
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
             BorderThickness = new Thickness(0),
             AllowFocusOnInteraction = false,
         };
@@ -635,7 +658,11 @@ public static class PlayerUi
     /// Makes a button an accent colored (filled) button.
     public static void ApplyAccentStyle(Button button)
     {
-        if (Application.Current.Resources.TryGetValue("AccentButtonStyle", out var style) && style is Style s) button.Style = s;
+        if (!Application.Current.Resources.TryGetValue("AccentButtonStyle", out var style) || style is not Style s) return;
+        // local values would override the style's accent background/border
+        button.ClearValue(Control.BackgroundProperty);
+        button.ClearValue(Control.BorderThicknessProperty);
+        button.Style = s;
     }
 
     /// Volume button with a slider flyout; the mouse wheel over the button changes the volume.
@@ -694,6 +721,7 @@ public static class PlayerUi
             Width = size,
             Height = size,
             Padding = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
             BorderThickness = new Thickness(0),
             AllowFocusOnInteraction = false,
         };
@@ -757,7 +785,4 @@ public static class PlayerUi
         return button;
     }
 
-    /// Converts a pointer event into "is the primary button double clicked" (XAML DoubleTapped works for mouse too).
-    public static bool IsRightClick(PointerRoutedEventArgs e, UIElement relativeTo) =>
-        e.GetCurrentPoint(relativeTo).Properties.IsRightButtonPressed;
 }

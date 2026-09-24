@@ -419,8 +419,9 @@ public sealed class MediaPlayerAudioEngine : IAudioStreamingPlayer
         var old = _current;
         if (old is null) return;
         if (oldId is { } o && o != old.Id && newEntry is null) return; // stale transition
+        if (old.IsErrorReported) return; // the player restarts the engine after an error
 
-        if (reason == MediaPlaybackItemChangedReason.Error && !old.IsErrorReported && !old.IsFinished)
+        if (reason == MediaPlaybackItemChangedReason.Error && !old.IsFinished)
         {
             ReportError(old, new AudioEngineException("Playback failed"));
             return;
@@ -432,7 +433,8 @@ public sealed class MediaPlayerAudioEngine : IAudioStreamingPlayer
     private void FinishCurrentAndAdvance(Entry? newEntry)
     {
         var old = _current;
-        if (old is null || old.IsFinished) return;
+        // an entry that never started (e.g. still preparing) can't finish
+        if (old is null || old.IsFinished || !old.IsStartReported) return;
         old.IsFinished = true;
         StopIcy();
         var oldIndex = _entries.IndexOf(old);
@@ -527,7 +529,18 @@ public sealed class MediaPlayerAudioEngine : IAudioStreamingPlayer
         MainThread.Post(() =>
         {
             if (_isDisposed || generation != _generation) return;
-            if (_current is { IsStartReported: true, IsFinished: false }) FinishCurrentAndAdvance(null);
+            if (_current is not { IsStartReported: true, IsFinished: false } current) return;
+            try
+            {
+                // the list continues with the next item (the transition is handled by CurrentItemChanged)
+                if (_player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing) return;
+                if (EntryIdOf(_list?.CurrentItem) is { } listCurrentId && listCurrentId != current.Id) return;
+            }
+            catch (Exception)
+            {
+                // finish below
+            }
+            FinishCurrentAndAdvance(null);
         });
     }
 

@@ -78,6 +78,7 @@ public sealed partial class NowPlayingPage : Page
         _isLyricsTab = _services.Settings.User.IsPlayerLyricsDisplayed;
 
         _observer.AnyChanged += Refresh;
+        _observer.ArtworkChanged += RefreshArtwork;
         _observer.StartedPlayingFromBeginning += FetchSongInfo;
         SizeChanged += (_, _) => UpdateLayoutForSize();
         KeyDown += Page_KeyDown;
@@ -107,6 +108,7 @@ public sealed partial class NowPlayingPage : Page
         base.OnNavigatedTo(e);
         _observer.Register().IsActive = true;
         PlayerUi.UiStateChanged += Refresh;
+        PlayerUi.CurrentArtworkChanged += RefreshArtwork;
         // the side pane would show the same content
         PlayerUi.ShowQueuePane(false);
         PlayerUi.ShowLyricsPane(false);
@@ -120,7 +122,10 @@ public sealed partial class NowPlayingPage : Page
         base.OnNavigatedFrom(e);
         _observer.IsActive = false;
         PlayerUi.UiStateChanged -= Refresh;
+        PlayerUi.CurrentArtworkChanged -= RefreshArtwork;
     }
+
+    private void RefreshArtwork() => Artwork.Refresh();
 
     private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -133,7 +138,7 @@ public sealed partial class NowPlayingPage : Page
 
     private void SelectTab(bool lyrics)
     {
-        if (lyrics && PlayerUi.Player.PlayerMode != PlayerMode.Music) lyrics = false;
+        if (lyrics && !PlayerUi.IsLyricsAvailable) lyrics = false;
         _isLyricsTab = lyrics;
         _services.Settings.User.IsPlayerLyricsDisplayed = lyrics;
         _queueTab.IsChecked = !lyrics;
@@ -196,7 +201,6 @@ public sealed partial class NowPlayingPage : Page
         _albumButton.IsEnabled = info.IsAlbumAvailable;
         ToolTipService.SetToolTip(_titleButton, info.Title);
         if (!ReferenceEquals(Artwork.Entity, playable)) Artwork.Entity = playable;
-        else Artwork.Refresh();
 
         if (playable is { IsFavoritable: true } && !_services.Settings.User.IsOfflineMode)
         {
@@ -217,8 +221,9 @@ public sealed partial class NowPlayingPage : Page
         _mode.Visibility = PlayerUi.IsPlayerModeSwitchVisible ? Visibility.Visible : Visibility.Collapsed;
         PlayerUi.SetGlyph(_mode, isMusic ? PlayerGlyphs.MusicMode : PlayerGlyphs.PodcastMode,
             isMusic ? "Music mode: switch to Podcast mode (Ctrl+M)" : "Podcast mode: switch to Music mode (Ctrl+M)");
-        _lyricsTab.Visibility = isMusic ? Visibility.Visible : Visibility.Collapsed;
-        if (!isMusic && _isLyricsTab) SelectTab(lyrics: false);
+        var isLyricsAvailable = PlayerUi.IsLyricsAvailable;
+        _lyricsTab.Visibility = isLyricsAvailable ? Visibility.Visible : Visibility.Collapsed;
+        if (!isLyricsAvailable && _isLyricsTab) SelectTab(lyrics: false);
 
         var context = isMusic ? player.ContextName : "";
         ContextText.Text = string.IsNullOrEmpty(context) ? "" : $"Playing from: {context}";

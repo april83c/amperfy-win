@@ -132,8 +132,10 @@ public sealed partial class MiniPlayerWindow : Window
         PlayerKeyboardShortcuts.Attach(this, () => true);
 
         _observer.AnyChanged += Refresh;
+        _observer.ArtworkChanged += RefreshArtwork;
         _observer.Register();
         PlayerUi.UiStateChanged += Refresh;
+        PlayerUi.CurrentArtworkChanged += RefreshArtwork;
         Closed += OnClosed;
         Refresh();
     }
@@ -188,14 +190,16 @@ public sealed partial class MiniPlayerWindow : Window
         ToolTipService.SetToolTip(_title, info.Title);
         var playable = PlayerUi.Player.CurrentlyPlaying;
         if (!ReferenceEquals(_artwork.Entity, playable)) _artwork.Entity = playable;
-        else _artwork.Refresh();
         _pin.IsChecked = AppServices.Instance.Settings.User.IsMiniPlayerAlwaysOnTop;
     }
+
+    private void RefreshArtwork() => _artwork.Refresh();
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
         _observer.IsActive = false;
         PlayerUi.UiStateChanged -= Refresh;
+        PlayerUi.CurrentArtworkChanged -= RefreshArtwork;
         if (_instance == this) _instance = null;
         if (_isAppClosing) return;
         if (_restoreMainWindowOnClose) PlayerUi.BringMainWindowToFront();
