@@ -26,13 +26,24 @@ public static class MainThread
 
     public static bool IsInitialized => _context is not null;
 
+    private static volatile bool _isShuttingDown;
+
+    /// App shutdown: from now on posted work and timer ticks are dropped (they could otherwise run
+    /// after the storage was disposed).
+    public static void BeginShutdown() => _isShuttingDown = true;
+
+    public static bool IsShuttingDown => _isShuttingDown;
+
     public static bool IsCurrent => _threadId == -1 || Environment.CurrentManagedThreadId == _threadId;
 
     /// Runs the action on the main thread (asynchronously; inline if no context is set up).
     public static void Post(Action action)
     {
         if (_context is null) action();
-        else _context.Post(_ => action(), null);
+        else _context.Post(_ =>
+        {
+            if (!_isShuttingDown) action();
+        }, null);
     }
 
     /// Runs the action on the main thread and completes when it ran.
@@ -83,7 +94,7 @@ public static class MainThread
                 if (_disposed) return;
                 Post(() =>
                 {
-                    if (!_disposed) tick();
+                    if (!_disposed && !_isShuttingDown) tick();
                 });
             }, null, interval, repeats ? interval : Timeout.InfiniteTimeSpan);
         }

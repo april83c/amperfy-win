@@ -596,8 +596,8 @@ public sealed class SubsonicServerApi : IUrlCleanser
             throw new ResponseError(ResponseErrorType.Api, (int)SubsonicError.RequestedDataNotFound, "404: Not Found", cleanedUrl, data);
         }
         // Like Alamofire: a response body is returned even for an error status (Subsonic error xml);
-        // only an error status without any body is reported as HTTP error.
-        if (!response.IsSuccessStatusCode && data.Length == 0)
+        // an error status without an XML body (e.g. Navidrome "501 Not Implemented" for podcasts) is an HTTP error.
+        if (!response.IsSuccessStatusCode && !GenericXmlParser.LooksLikeXml(data))
         {
             throw new HttpRequestException(
                 $"Response status code does not indicate success: {(int)response.StatusCode} ({response.ReasonPhrase}).",

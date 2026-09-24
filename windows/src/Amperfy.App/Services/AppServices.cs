@@ -89,6 +89,8 @@ public sealed class AppServices
 
     public void Shutdown()
     {
+        // queued main thread work (player timers, engine events) must not run on disposed storage
+        MainThread.BeginShutdown();
         try { Kit.Dispose(); } catch (Exception ex) { CrashLog.Write($"Shutdown: {ex}"); }
         try { AudioBackend.Shutdown(); } catch (Exception ex) { CrashLog.Write($"Audio shutdown: {ex}"); }
     }

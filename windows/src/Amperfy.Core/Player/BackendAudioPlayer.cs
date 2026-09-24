@@ -147,6 +147,9 @@ public sealed class BackendAudioPlayer
         });
     }
 
+    /// Stops the progress timers (app shutdown).
+    public void Shutdown() => StopTimers();
+
     private void StopTimers()
     {
         _timerElapsedTimeInterval?.Dispose();

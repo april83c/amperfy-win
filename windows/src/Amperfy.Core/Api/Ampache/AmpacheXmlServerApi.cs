@@ -363,7 +363,7 @@ public sealed class AmpacheXmlServerApi : IUrlCleanser
         using var request = AmperfyHttp.CreateGet(url, headers);
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
         var data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode && data.Length == 0)
+        if (!response.IsSuccessStatusCode && !GenericXmlParser.LooksLikeXml(data))
             throw new HttpRequestException($"Response status code does not indicate success: {(int)response.StatusCode} ({response.ReasonPhrase}).", null, response.StatusCode);
         return new ApiDataResponse(data, url);
     }

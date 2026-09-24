@@ -20,6 +20,7 @@ public sealed class PlayerComponents : IDisposable
 
     public void Dispose()
     {
+        BackendAudioPlayer.Shutdown();
         SleepTimer.Dispose();
         NowPlayingInfoHandler?.Dispose();
     }

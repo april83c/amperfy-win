@@ -189,6 +189,7 @@ public sealed class AmperKit : IDisposable
     public void Dispose()
     {
         BackgroundFetcher.Stop();
+        try { PlayerComponents?.Player.Stop(); } catch (Exception ex) { AmperfyLog.Error("AmperKit", $"Stop player: {ex.Message}"); }
         PlayerComponents?.Dispose();
         foreach (var meta in _metaManagers.Values) meta.Dispose();
         _metaManagers.Clear();
