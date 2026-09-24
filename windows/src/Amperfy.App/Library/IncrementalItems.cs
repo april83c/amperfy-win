@@ -23,7 +23,7 @@ public sealed class IncrementalItems : ObservableCollection<object>, ISupportInc
         PageSize = pageSize;
     }
 
-    public int TotalCount { get; }
+    public int TotalCount { get; private set; }
     public int PageSize { get; }
 
     /// Number of loaded entities (the collection may contain additional header items).
@@ -56,6 +56,15 @@ public sealed class IncrementalItems : ObservableCollection<object>, ISupportInc
         foreach (var item in page) Add(item);
         _loadedEntityCount += page.Count;
         return page.Count;
+    }
+
+    /// The query returns more items now (e.g. after fetching more from the server): loads them.
+    public void ExtendTotal(int newTotalCount)
+    {
+        if (newTotalCount <= TotalCount) return;
+        TotalCount = newTotalCount;
+        _isExhausted = false;
+        LoadMore(newTotalCount - _loadedEntityCount);
     }
 
     /// Loads pages until the entity with the given index is part of the collection.

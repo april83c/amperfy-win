@@ -20,6 +20,7 @@ public sealed partial class EntityRow : UserControl
     private readonly TextBlock _info;
     private readonly FontIcon _favorite;
     private readonly FontIcon _typeIcon;
+    private readonly MenuFlyout _flyout;
     private LibraryItem? _item;
     private bool _isSubscribed;
 
@@ -68,7 +69,7 @@ public sealed partial class EntityRow : UserControl
         root.Children.Add(chevron);
 
         Content = root;
-        ContextFlyout = EntityActions.CreateMenuFlyout(() =>
+        _flyout = EntityActions.CreateMenuFlyout(() =>
         {
             if (_item?.Container is not { } container) return null;
             var item = _item;
@@ -121,6 +122,7 @@ public sealed partial class EntityRow : UserControl
     {
         if (_item is null) return;
         var entity = LibraryItem.Unwrap(_item.Entity);
+        ContextFlyout = entity is IPlayableContainable ? _flyout : null;
         var isHistory = _item.Entity is SearchHistoryItem;
         _typeIcon.Visibility = isHistory ? Visibility.Visible : Visibility.Collapsed;
         _favorite.Visibility = Visibility.Collapsed;
