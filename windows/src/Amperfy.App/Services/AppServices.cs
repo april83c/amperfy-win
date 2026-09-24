@@ -28,12 +28,28 @@ public sealed class AppServices
     public IPlayerFacade Player => PlayerComponents.Player;
     public SleepTimer SleepTimer => PlayerComponents.SleepTimer;
 
+    private readonly IDisposable _downloadRegistration;
+    private bool _artworkRefreshPending;
+    private IDisposable? _artworkRefreshTimer;
+
     private AppServices(AmperKit kit)
     {
         Kit = kit;
         Alerts = new AlertService(Dialogs);
         kit.EventLogger.AlertDisplayer = Alerts;
         PlayerComponents = kit.InitializePlayer(AudioBackend.CreateEngine, AudioBackend.CreateSystemMediaControls());
+        // Downloaded artworks (and songs with embedded artworks): refresh visible images, debounced.
+        _downloadRegistration = kit.NotificationHandler.Register(AmperfyNotification.DownloadFinishedSuccess, _ =>
+        {
+            if (_artworkRefreshPending) return;
+            _artworkRefreshPending = true;
+            _artworkRefreshTimer = MainThread.CreateTimer(TimeSpan.FromMilliseconds(700), () =>
+            {
+                _artworkRefreshPending = false;
+                _artworkRefreshTimer?.Dispose();
+                ArtworkImage.NotifyArtworkChanged();
+            }, repeats: false);
+        });
     }
 
     public static AppServices Initialize()
