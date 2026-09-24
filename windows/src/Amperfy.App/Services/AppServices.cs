@@ -1,4 +1,6 @@
 using Amperfy.App.Controls;
+using Amperfy.App.Services.Audio;
+using Amperfy.Core.Player;
 using Amperfy.Core;
 using Amperfy.Core.Common;
 using Amperfy.Core.Model;
@@ -21,12 +23,17 @@ public sealed class AppServices
     public DialogService Dialogs { get; } = new();
     public AlertService Alerts { get; }
     public MainWindow MainWindow { get; internal set; } = null!;
+    public PlayerComponents PlayerComponents { get; }
+    /// The app wide player (port of appDelegate.player).
+    public IPlayerFacade Player => PlayerComponents.Player;
+    public SleepTimer SleepTimer => PlayerComponents.SleepTimer;
 
     private AppServices(AmperKit kit)
     {
         Kit = kit;
         Alerts = new AlertService(Dialogs);
         kit.EventLogger.AlertDisplayer = Alerts;
+        PlayerComponents = kit.InitializePlayer(AudioBackend.CreateEngine, AudioBackend.CreateSystemMediaControls());
     }
 
     public static AppServices Initialize()

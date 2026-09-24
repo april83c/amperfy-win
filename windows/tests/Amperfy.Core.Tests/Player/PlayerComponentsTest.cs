@@ -398,7 +398,7 @@ public class PlayerComponentsTest : IDisposable
         var count = controls.NowPlayingUpdateCount;
         notificationHandler.Post(AmperfyNotification.DownloadFinishedSuccess, null, new DownloadNotification("playable-99999"));
         Assert.Equal(count, controls.NowPlayingUpdateCount);
-        notificationHandler.Post(AmperfyNotification.DownloadFinishedSuccess, null, new DownloadNotification(Downloads.DownloadableExtensions.UniqueId(song)));
+        notificationHandler.Post(AmperfyNotification.DownloadFinishedSuccess, null, new DownloadNotification(Amperfy.Core.Downloads.DownloadableExtensions.UniqueId(song)));
         Assert.Equal(count + 1, controls.NowPlayingUpdateCount);
     });
 

@@ -1,5 +1,6 @@
 using Amperfy.Core.Api;
 using Amperfy.Core.Downloads;
+using Amperfy.Core.Player;
 using Amperfy.Core.Sync;
 
 namespace Amperfy.Core;
@@ -90,8 +91,19 @@ public sealed class MetaManager : IDisposable
     public BackgroundFetchTriggeredSyncer BackgroundFetchTriggeredSyncer => _backgroundFetchTriggeredSyncer ??=
         new BackgroundFetchTriggeredSyncer(_library, _settings, Account, LibrarySyncer, _localNotificationManager, PlayableDownloadManager);
 
-    /// Additional per-account services registered by the player (scrobble syncer).
+    /// Additional per-account services registered by the player.
     public List<IDisposable> PlayerServices { get; } = [];
+
+    /// Scrobble syncer of this account (created when the player is attached, kept alive here because
+    /// the player holds its notifiers weakly).
+    public ScrobbleSyncer? ScrobbleSyncer { get; private set; }
+
+    public void AttachPlayer(IPlayerFacade player)
+    {
+        if (ScrobbleSyncer is not null) return;
+        ScrobbleSyncer = new ScrobbleSyncer(player, _networkMonitor, Account, _library, _settings, LibrarySyncer, _eventLogger);
+        player.AddNotifier(ScrobbleSyncer);
+    }
 
     public void StartManagerAfterSync()
     {
@@ -99,6 +111,7 @@ public sealed class MetaManager : IDisposable
         PlayableDownloadManager.Start();
         ArtworkDownloadManager.Start();
         BackgroundLibrarySyncer.Start();
+        ScrobbleSyncer?.Start();
     }
 
     public void StartManagerForNormalOperation()
@@ -108,6 +121,7 @@ public sealed class MetaManager : IDisposable
         ArtworkDownloadManager.Start();
         PlayableDownloadManager.Start();
         BackgroundLibrarySyncer.Start();
+        ScrobbleSyncer?.Start();
     }
 
     public void StopManager()
@@ -115,6 +129,7 @@ public sealed class MetaManager : IDisposable
         AmperfyLog.Info("MetaManager", "Stop meta managers");
         foreach (var s in PlayerServices) s.Dispose();
         PlayerServices.Clear();
+        ScrobbleSyncer?.Stop();
         _backgroundLibrarySyncer?.Stop();
         _artworkDownloadManager?.Stop();
         _playableDownloadManager?.Stop();

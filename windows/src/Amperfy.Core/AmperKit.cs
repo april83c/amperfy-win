@@ -1,3 +1,4 @@
+using Amperfy.Core.Player;
 using Amperfy.Core.Api;
 using Amperfy.Core.Sync;
 
@@ -37,7 +38,27 @@ public sealed class AmperKit : IDisposable
         var account = Library.GetAccount(accountInfo);
         meta = new MetaManager(account, Library, Settings, NetworkMonitor, EventLogger, NotificationHandler, LocalNotificationManager);
         _metaManagers[accountInfo] = meta;
+        if (PlayerComponents is { } pc) meta.AttachPlayer(pc.Player);
         return meta;
+    }
+
+    /// The (app wide) player; null until <see cref="InitializePlayer"/> was called.
+    public PlayerComponents? PlayerComponents { get; private set; }
+
+    public IPlayerFacade Player => PlayerComponents?.Player ?? throw new InvalidOperationException("Player not initialized");
+
+    /// Creates the player with the platform audio engine and system media controls (port of AppDelegate.player).
+    public PlayerComponents InitializePlayer(Func<IAudioStreamingPlayer> createAudioStreamingPlayer, ISystemMediaControls? systemMediaControls)
+    {
+        if (PlayerComponents is not null) return PlayerComponents;
+        PlayerComponents = PlayerFactory.Create(Library, Settings, EventLogger, NetworkMonitor, createAudioStreamingPlayer,
+            info => GetMeta(info).BackendApi,
+            info => GetMeta(info).PlayableDownloadManager,
+            info => GetMeta(info).LibrarySyncer,
+            UserStatistics, NotificationHandler, systemMediaControls,
+            info => GetMeta(info).ArtworkDownloadManager);
+        foreach (var meta in _metaManagers.Values) meta.AttachPlayer(PlayerComponents.Player);
+        return PlayerComponents;
     }
 
     public IReadOnlyDictionary<AccountInfo, MetaManager> AllActiveMetas => _metaManagers;
@@ -147,6 +168,7 @@ public sealed class AmperKit : IDisposable
     public void Logout(AccountInfo accountInfo)
     {
         if (_metaManagers.TryGetValue(accountInfo, out var meta)) meta.StopManager();
+        PlayerComponents?.Player.Logout(Library.GetAccount(accountInfo));
         ResetMeta(accountInfo);
         CacheFileManager.Shared.DeleteAccountCache(accountInfo);
         Settings.Accounts.Logout(accountInfo);
@@ -167,6 +189,7 @@ public sealed class AmperKit : IDisposable
     public void Dispose()
     {
         BackgroundFetcher.Stop();
+        PlayerComponents?.Dispose();
         foreach (var meta in _metaManagers.Values) meta.Dispose();
         _metaManagers.Clear();
         Storage.Dispose();
