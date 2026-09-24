@@ -26,6 +26,30 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.2.251219" />
   </ItemGroup>
+  <!-- Linux-only C# check (scripts/linux-check.sh): XAML compiler replaced by generated stubs -->
+  <PropertyGroup Condition="'$(AmperfyLinuxCheck)' == 'true'">
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN;AMPERFY_LINUX_CHECK</DefineConstants>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <SelfContained>false</SelfContained>
+    <ApplicationManifest></ApplicationManifest>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+    <AppxGeneratePriEnabled>false</AppxGeneratePriEnabled>
+    <ExpandPriResources>false</ExpandPriResources>
+    <EnableCoreMrtTooling>false</EnableCoreMrtTooling>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(AmperfyLinuxCheck)' == 'true'">
+    <Page Remove="@(Page)" />
+    <ApplicationDefinition Remove="@(ApplicationDefinition)" />
+    <Compile Remove="obj/xamlstubs/**" />
+    <Compile Include="obj/xamlstubs/**/*.stub.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(AmperfyLinuxCheck)' != 'true'">
+    <Compile Remove="obj/xamlstubs/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Amperfy.Core\Amperfy.Core.csproj" />
   </ItemGroup>
