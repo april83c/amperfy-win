@@ -216,7 +216,7 @@ public sealed partial class PlaylistDetailPage : Page
 
     private void OnListKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!_isEditing || e.Key != VirtualKey.Delete) return;
+        if (!_isEditing || e.Key != VirtualKey.Delete || e.OriginalSource is TextBox) return;
         e.Handled = true;
         _ = RemoveSelectedAsync();
     }

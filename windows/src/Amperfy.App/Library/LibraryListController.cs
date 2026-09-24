@@ -135,10 +135,9 @@ public sealed class LibraryListController
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != VirtualKey.Enter || _list.IsItemClickEnabled) return;
-        var item = (FocusManager.GetFocusedElement(_list.XamlRoot) as SelectorItem) is { } container
-            ? _list.ItemFromContainer(container) as LibraryItem
-            : _list.SelectedItem as LibraryItem;
-        if (item is null) return;
+        // only for focused list items (not for text boxes in the list header)
+        if (Ui.FindAncestor<SelectorItem>(FocusManager.GetFocusedElement(_list.XamlRoot) as DependencyObject) is not { } container) return;
+        if (_list.ItemFromContainer(container) is not LibraryItem item) return;
         e.Handled = true;
         Activate(item);
     }
