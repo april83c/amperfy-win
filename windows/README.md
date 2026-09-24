@@ -59,7 +59,7 @@ dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 
 ```
 This needs the .NET 10 SDK on Windows; no Visual Studio workload is required. For ARM64, use `-r win-arm64 -p:Platform=ARM64`.
 
-To publish a release, push a tag (e.g. `git tag v2.0.1 && git push origin v2.0.1`). The `Windows release` workflow then:
+To publish a release, push a tag (e.g. `git tag v2.0.1 && git push origin v2.0.1`), or run the `Windows release` workflow manually (Actions > Windows release > Run workflow) with the tag name. The workflow then:
 - builds x64 and ARM64 with that version;
 - packs them with [Velopack](https://velopack.io) (installer, portable zip, full and delta update packages; channels `win-x64` / `win-arm64`);
 - publishes a GitHub release.

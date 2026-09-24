@@ -4,18 +4,26 @@ name: Windows release
 # (installer, portable zip, full + delta update packages) and publishes a GitHub release. The
 # release is also the update feed of the installed apps (Velopack GithubSource, one channel per
 # architecture: win-x64, win-arm64). Tags with a suffix (v2.1.0-beta.1) become pre-releases.
+# It can also be started manually (Actions > Windows release > Run workflow) with a tag name; the
+# release (and its tag) is then created on the current commit of the selected branch.
 on:
   push:
     tags: ['*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create (e.g. v2.0.1)'
+        required: true
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   VPK_VERSION: 1.2.158
@@ -31,7 +39,7 @@ jobs:
       - name: Version from tag
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
+          $tag = $env:RELEASE_TAG
           $version = $tag -replace '^[vV]', ''
           if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Tag '$tag' is not a semantic version (expected e.g. v2.0.1)" }
           "VERSION=$version" >> $env:GITHUB_ENV
@@ -78,7 +86,7 @@ jobs:
           if ($env:PRERELEASE -eq '1') { $extra += '--pre' }
           foreach ($arch in 'x64', 'arm64') {
             vpk upload github --repoUrl $repo --token $env:GH_TOKEN --channel win-$arch -o releases/$arch `
-              --publish --merge @extra --releaseName "Amperfy for Windows $env:VERSION" --tag "${{ github.ref_name }}" --targetCommitish "${{ github.sha }}"
+              --publish --merge @extra --releaseName "Amperfy for Windows $env:VERSION" --tag $env:RELEASE_TAG --targetCommitish "${{ github.sha }}"
             if ($LASTEXITCODE -ne 0) { throw "upload $arch failed" }
           }
       - uses: actions/upload-artifact@v4
