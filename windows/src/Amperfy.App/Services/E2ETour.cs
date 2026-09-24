@@ -31,6 +31,7 @@ public static class E2ETour
             });
             tour.AddStep("home", async () =>
             {
+                if (!services.Kit.IsLoggedIn) throw new InvalidOperationException("Login failed, skipping the library tour");
                 await WaitUntil(() => window.RootContentFrame.Content is ShellPage, TimeSpan.FromMinutes(3));
             });
         }
