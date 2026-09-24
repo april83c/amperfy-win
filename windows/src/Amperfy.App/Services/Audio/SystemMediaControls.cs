@@ -97,7 +97,6 @@ public sealed class SystemMediaControls : ISystemMediaControls, IDisposable
                     _ = UpdateThumbnailAsync(metadata.ArtworkPath);
                 }
             }
-            _smtc.IsNextEnabled = true;
             UpdateTimeline(metadata.IsLiveStream ? 0 : metadata.ElapsedTime, metadata.IsLiveStream ? 0 : metadata.Duration);
             if (Math.Abs(_smtc.PlaybackRate - metadata.PlaybackRate) > 0.001 && metadata.PlaybackRate > 0) _smtc.PlaybackRate = metadata.PlaybackRate;
         }

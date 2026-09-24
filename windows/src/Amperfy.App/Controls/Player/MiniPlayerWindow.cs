@@ -123,8 +123,13 @@ public sealed partial class MiniPlayerWindow : Window
         _root.Children.Add(transport);
         _root.Children.Add(extras);
         _root.RequestedTheme = AppServices.Instance.RequestedElementTheme;
-        if (Application.Current.Resources.TryGetValue("LayerFillColorDefaultBrush", out var background) && background is Brush brush)
-            _root.Background = brush;
+        if (!Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
+        {
+            // no Mica (Windows 10): solid background in the effective theme
+            var isDark = _root.RequestedTheme == ElementTheme.Dark ||
+                         (_root.RequestedTheme == ElementTheme.Default && Application.Current.RequestedTheme == ApplicationTheme.Dark);
+            _root.Background = new SolidColorBrush(isDark ? Windows.UI.Color.FromArgb(255, 32, 32, 32) : Windows.UI.Color.FromArgb(255, 243, 243, 243));
+        }
         Content = _root;
 
         try { AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico")); } catch (Exception) { /* ignore */ }

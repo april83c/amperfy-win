@@ -392,8 +392,10 @@ public sealed partial class QueueView : UserControl
             _subtitle.Visibility = string.IsNullOrEmpty(row.Subtitle) ? Visibility.Collapsed : Visibility.Visible;
             _playingIcon.Visibility = isCurrent ? Visibility.Visible : Visibility.Collapsed;
             _playingIcon.Glyph = player.IsPlaying ? Icons.Volume : Icons.Pause;
-            if (isCurrent && Application.Current.Resources.TryGetValue("AccentTextFillColorPrimaryBrush", out var accent) && accent is Brush brush)
+            if (isCurrent)
             {
+                // account theme color (theme independent)
+                var brush = new SolidColorBrush(ThemeHelper.AccentColor(AppServices.Instance.ActiveTheme));
                 _title.Foreground = brush;
                 _playingIcon.Foreground = brush;
             }

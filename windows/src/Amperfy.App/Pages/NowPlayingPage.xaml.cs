@@ -22,12 +22,6 @@ public sealed partial class NowPlayingPage : Page
     private readonly AppServices _services = AppServices.Instance;
     private readonly PlayerObserver _observer = new();
     private readonly PlayerTransportControls _transport;
-    private readonly HyperlinkButton _titleButton;
-    private readonly TextBlock _titleText;
-    private readonly HyperlinkButton _artistButton;
-    private readonly TextBlock _artistText;
-    private readonly HyperlinkButton _albumButton;
-    private readonly TextBlock _albumText;
     private readonly Button _favorite;
     private readonly Button _mode;
     private readonly ToggleButton _queueTab;
@@ -40,17 +34,9 @@ public sealed partial class NowPlayingPage : Page
     {
         InitializeComponent();
 
-        (_titleButton, _titleText) = CreateLink("TitleTextBlockStyle", 24);
-        (_artistButton, _artistText) = CreateLink("SubtitleTextBlockStyle", 18);
-        (_albumButton, _albumText) = CreateLink("BodyTextBlockStyle", 14);
-        _artistText.Opacity = 0.85;
-        _albumText.Opacity = 0.7;
-        _titleButton.Click += (_, _) => PlayerUi.ShowAlbum(PlayerUi.Player.CurrentlyPlaying);
-        _artistButton.Click += (_, _) => PlayerUi.ShowArtist(PlayerUi.Player.CurrentlyPlaying);
-        _albumButton.Click += (_, _) => PlayerUi.ShowAlbum(PlayerUi.Player.CurrentlyPlaying);
-        InfoPanel.Children.Add(_titleButton);
-        InfoPanel.Children.Add(_artistButton);
-        InfoPanel.Children.Add(_albumButton);
+        TitleButton.Click += (_, _) => PlayerUi.ShowAlbum(PlayerUi.Player.CurrentlyPlaying);
+        ArtistButton.Click += (_, _) => PlayerUi.ShowArtist(PlayerUi.Player.CurrentlyPlaying);
+        AlbumButton.Click += (_, _) => PlayerUi.ShowAlbum(PlayerUi.Player.CurrentlyPlaying);
 
         _favorite = PlayerUi.CreateIconButton(Icons.Heart, "Favorite", () => _ = ToggleFavoriteAsync(), 44, 20);
         FavoriteHost.Child = _favorite;
@@ -82,15 +68,6 @@ public sealed partial class NowPlayingPage : Page
         _observer.StartedPlayingFromBeginning += FetchSongInfo;
         SizeChanged += (_, _) => UpdateLayoutForSize();
         KeyDown += Page_KeyDown;
-    }
-
-    private static (HyperlinkButton Button, TextBlock Text) CreateLink(string styleKey, double fallbackSize)
-    {
-        var text = new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap, FontSize = fallbackSize };
-        if (Application.Current.Resources.TryGetValue(styleKey, out var style) && style is Style s) text.Style = s;
-        if (Application.Current.Resources.TryGetValue("TextFillColorPrimaryBrush", out var brush) && brush is Microsoft.UI.Xaml.Media.Brush b) text.Foreground = b;
-        var button = new HyperlinkButton { Content = text, Padding = new Thickness(0), MinHeight = 0, HorizontalAlignment = HorizontalAlignment.Left };
-        return (button, text);
     }
 
     private static ToggleButton CreateTab(string text, string glyph, Action onClick)
@@ -191,15 +168,15 @@ public sealed partial class NowPlayingPage : Page
         var player = PlayerUi.Player;
         var info = PlayerUi.CurrentInfo();
         var playable = player.CurrentlyPlaying;
-        _titleText.Text = info.Title;
-        _artistText.Text = info.Artist;
-        _artistButton.Visibility = string.IsNullOrEmpty(info.Artist) ? Visibility.Collapsed : Visibility.Visible;
-        _albumText.Text = info.Album;
-        _albumButton.Visibility = string.IsNullOrEmpty(info.Album) || info.Album == info.Title ? Visibility.Collapsed : Visibility.Visible;
-        _titleButton.IsEnabled = info.IsAlbumAvailable;
-        _artistButton.IsEnabled = info.IsArtistAvailable;
-        _albumButton.IsEnabled = info.IsAlbumAvailable;
-        ToolTipService.SetToolTip(_titleButton, info.Title);
+        TitleText.Text = info.Title;
+        ArtistText.Text = info.Artist;
+        ArtistButton.Visibility = string.IsNullOrEmpty(info.Artist) ? Visibility.Collapsed : Visibility.Visible;
+        AlbumText.Text = info.Album;
+        AlbumButton.Visibility = string.IsNullOrEmpty(info.Album) || info.Album == info.Title ? Visibility.Collapsed : Visibility.Visible;
+        TitleButton.IsEnabled = info.IsAlbumAvailable;
+        ArtistButton.IsEnabled = info.IsArtistAvailable;
+        AlbumButton.IsEnabled = info.IsAlbumAvailable;
+        ToolTipService.SetToolTip(TitleButton, info.Title);
         if (!ReferenceEquals(Artwork.Entity, playable)) Artwork.Entity = playable;
 
         if (playable is { IsFavoritable: true } && !_services.Settings.User.IsOfflineMode)

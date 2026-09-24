@@ -32,7 +32,32 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel x:Name="InfoPanel" />
+                    <StackPanel x:Name="InfoPanel">
+                        <HyperlinkButton x:Name="TitleButton" Padding="0" MinHeight="0" HorizontalAlignment="Left">
+                            <TextBlock
+                                x:Name="TitleText"
+                                Style="{StaticResource TitleTextBlockStyle}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        </HyperlinkButton>
+                        <HyperlinkButton x:Name="ArtistButton" Padding="0" MinHeight="0" HorizontalAlignment="Left">
+                            <TextBlock
+                                x:Name="ArtistText"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </HyperlinkButton>
+                        <HyperlinkButton x:Name="AlbumButton" Padding="0" MinHeight="0" HorizontalAlignment="Left">
+                            <TextBlock
+                                x:Name="AlbumText"
+                                Style="{StaticResource BodyTextBlockStyle}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </HyperlinkButton>
+                    </StackPanel>
                     <Border x:Name="FavoriteHost" Grid.Column="1" VerticalAlignment="Center" />
                 </Grid>
                 <Border x:Name="TransportHost" />

@@ -61,10 +61,16 @@ public sealed partial class SeekBar : UserControl
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Visibility = Visibility.Collapsed,
-            Child = new TextBlock { Text = "LIVE", FontSize = 11, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold },
+            // theme independent (brushes from the app resources don't follow a per window RequestedTheme)
+            Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 196, 43, 28)),
+            Child = new TextBlock
+            {
+                Text = "LIVE",
+                FontSize = 11,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Microsoft.UI.Colors.White),
+            },
         };
-        if (Application.Current.Resources.TryGetValue("SystemFillColorCriticalBackgroundBrush", out var liveBrush) && liveBrush is Brush b)
-            _live.Background = b;
 
         _playTypeIcon = new FontIcon { FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
         _audioInfo = new TextBlock { FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 };
