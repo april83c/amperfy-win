@@ -113,6 +113,9 @@ public sealed partial class NowPlayingPage : Page
         }
     }
 
+    /// Selects the lyrics tab (e.g. "Show Lyrics" of the current song's context menu).
+    public void ShowLyricsTab() => SelectTab(lyrics: true);
+
     private void SelectTab(bool lyrics)
     {
         if (lyrics && !PlayerUi.IsLyricsAvailable) lyrics = false;
