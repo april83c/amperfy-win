@@ -1,0 +1,70 @@
+using Amperfy.App.Controls;
+using Amperfy.Core;
+using Amperfy.Core.Common;
+using Amperfy.Core.Model;
+using Amperfy.Core.Storage;
+using Microsoft.UI.Xaml;
+
+namespace Amperfy.App.Services;
+
+/// App-wide services (UI side of the composition root). Access via AppServices.Instance.
+public sealed class AppServices
+{
+    public static AppServices Instance { get; private set; } = null!;
+
+    public AmperKit Kit { get; }
+    public LibraryStorage Library => Kit.Library;
+    public AmperfySettings Settings => Kit.Settings;
+    public EventLogger EventLogger => Kit.EventLogger;
+    public EventNotificationHandler Notifications => Kit.NotificationHandler;
+    public NavigationService Navigation { get; } = new();
+    public DialogService Dialogs { get; } = new();
+    public AlertService Alerts { get; }
+    public MainWindow MainWindow { get; internal set; } = null!;
+
+    private AppServices(AmperKit kit)
+    {
+        Kit = kit;
+        Alerts = new AlertService(Dialogs);
+        kit.EventLogger.AlertDisplayer = Alerts;
+    }
+
+    public static AppServices Initialize()
+    {
+        if (SynchronizationContext.Current is { } ctx) MainThread.Initialize(ctx);
+        AmperfyLog.SetFileSink(AppPaths.LogFile);
+        SecretProtection.Protector = new DpapiSecretProtector();
+        CacheFileManager.Shared = new CacheFileManager(AppPaths.CacheDirectory);
+        var storage = PersistentStorage.Open(AppPaths.DataDirectory);
+        var kit = new AmperKit(storage, new NetworkMonitor());
+        Instance = new AppServices(kit);
+        ArtworkImage.SettingsProvider = account =>
+        {
+            var setting = kit.Settings.Accounts.GetSetting(account?.Info);
+            return (setting.ArtworkDisplayPreference, setting.ThemePreference);
+        };
+        kit.UserStatistics.SessionStarted();
+        return Instance;
+    }
+
+    public Account? ActiveAccount => Kit.ActiveAccount;
+    public MetaManager? ActiveMeta => Kit.ActiveMeta;
+
+    public ThemePreference ActiveTheme => Settings.Accounts.ActiveSetting.ThemePreference;
+
+    public DetailInfoType DetailInfo(DetailType type) => new(type, Settings, Library);
+
+    public ServerApiType? ActiveApiType => ActiveAccount?.ApiType.AsServerApiType();
+
+    public ElementTheme RequestedElementTheme => Settings.User.AppearanceMode switch
+    {
+        AppearanceMode.Light => ElementTheme.Light,
+        AppearanceMode.Dark => ElementTheme.Dark,
+        _ => ElementTheme.Default,
+    };
+
+    public void Shutdown()
+    {
+        try { Kit.Dispose(); } catch (Exception ex) { CrashLog.Write($"Shutdown: {ex}"); }
+    }
+}

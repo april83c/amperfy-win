@@ -112,8 +112,19 @@ public sealed class AmperKit : IDisposable
             EventLogger.Report("Initial Sync", ex, displayPopup: false);
             status = SyncCompletionStatus.Aborted;
         }
+        if (_skippedInitialSyncs.Remove(account.Info)) return SyncCompletionStatus.Skipped;
         FinishInitialSync(account.Info, status);
         return status;
+    }
+
+    private readonly HashSet<AccountInfo> _skippedInitialSyncs = [];
+
+    /// Skips a running initial sync (SyncVC skip button): the app continues with the partially
+    /// synced library, the running sync finishes in the background without changing the status.
+    public void SkipInitialSync(AccountInfo accountInfo)
+    {
+        _skippedInitialSyncs.Add(accountInfo);
+        FinishInitialSync(accountInfo, SyncCompletionStatus.Skipped);
     }
 
     public void FinishInitialSync(AccountInfo accountInfo, SyncCompletionStatus status)

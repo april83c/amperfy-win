@@ -7,7 +7,40 @@
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
-    <Grid>
-        <TextBlock Text="Amperfy" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource TitleTextBlockStyle}" />
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TitleBar
+            x:Name="AppTitleBar"
+            Title="Amperfy"
+            IsBackButtonVisible="False"
+            IsPaneToggleButtonVisible="False"
+            BackRequested="AppTitleBar_BackRequested"
+            PaneToggleRequested="AppTitleBar_PaneToggleRequested">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/AppIcon64.png" />
+            </TitleBar.IconSource>
+            <TitleBar.Content>
+                <AutoSuggestBox
+                    x:Name="SearchBox"
+                    MinWidth="320"
+                    MaxWidth="560"
+                    PlaceholderText="Search"
+                    QueryIcon="Find"
+                    Visibility="Collapsed"
+                    QuerySubmitted="SearchBox_QuerySubmitted"
+                    TextChanged="SearchBox_TextChanged" />
+            </TitleBar.Content>
+        </TitleBar>
+        <Frame x:Name="RootFrame" Grid.Row="1" />
+        <StackPanel
+            x:Name="AlertHost"
+            Grid.Row="1"
+            Margin="0,0,16,104"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Spacing="8" />
     </Grid>
 </Window>

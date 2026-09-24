@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Amperfy.App.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <NavigationView
+            x:Name="NavView"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="False"
+            IsSettingsVisible="True"
+            IsTitleBarAutoPaddingEnabled="False"
+            PaneDisplayMode="Left"
+            OpenPaneLength="260"
+            CompactModeThresholdWidth="640"
+            ExpandedModeThresholdWidth="1000"
+            SelectionChanged="NavView_SelectionChanged"
+            ItemInvoked="NavView_ItemInvoked">
+            <NavigationView.PaneFooter>
+                <StackPanel>
+                    <NavigationViewItem x:Name="AccountItem" Content="Account" Tapped="AccountItem_Tapped" SelectsOnInvoked="False">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE77B;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </StackPanel>
+            </NavigationView.PaneFooter>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Frame x:Name="ContentFrame" />
+                <Border
+                    x:Name="SidePaneHost"
+                    Grid.Column="1"
+                    Width="380"
+                    Visibility="Collapsed"
+                    BorderThickness="1,0,0,0"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}" />
+            </Grid>
+        </NavigationView>
+        <controls:PlayerBar x:Name="PlayerBarControl" Grid.Row="1" />
+    </Grid>
+</Page>

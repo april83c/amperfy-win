@@ -14,6 +14,8 @@ public enum AmperfyNotification
     NetworkStatusChanged,
     /// Library content changed (after a sync step) - lists should refresh.
     LibraryChanged,
+    /// The sidebar library categories (LibraryDisplaySettings) of the active account changed.
+    LibraryDisplaySettingsChanged,
 }
 
 public sealed record NotificationArgs(AmperfyNotification Name, object? Sender = null, object? Payload = null);

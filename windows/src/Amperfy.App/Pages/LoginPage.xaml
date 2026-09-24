@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Amperfy.App.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <Grid Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Width="420" Spacing="14">
+                <Image Source="ms-appx:///Assets/AppIcon.png" Width="96" Height="96" HorizontalAlignment="Center" />
+                <TextBlock x:Name="HeaderText" Text="Amperfy" Style="{StaticResource TitleLargeTextBlockStyle}" HorizontalAlignment="Center" />
+                <TextBlock Text="Connect to your Subsonic, Navidrome or Ampache server"
+                           Style="{StaticResource BodyTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center" />
+                <TextBox x:Name="ServerUrlBox" Header="Server URL" PlaceholderText="https://music.example.com" InputScope="Url" KeyDown="Input_KeyDown" />
+                <TextBox x:Name="UsernameBox" Header="Username" KeyDown="Input_KeyDown" />
+                <PasswordBox x:Name="PasswordBox" Header="Password" KeyDown="Input_KeyDown" />
+                <ComboBox x:Name="ApiTypeBox" Header="Server API" HorizontalAlignment="Stretch" SelectedIndex="0">
+                    <ComboBoxItem Content="Auto-detect" />
+                    <ComboBoxItem Content="Ampache" />
+                    <ComboBoxItem Content="Subsonic" />
+                    <ComboBoxItem Content="Subsonic (legacy login)" />
+                </ComboBox>
+                <Expander Header="Custom HTTP headers" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                    <StackPanel Spacing="8">
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Text="Headers sent with every request, e.g. for a reverse proxy. One per line in the form Name: Value" />
+                        <TextBox x:Name="HeadersBox" AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="80" PlaceholderText="X-Api-Key: secret" />
+                    </StackPanel>
+                </Expander>
+                <InfoBar x:Name="ErrorBar" Severity="Error" IsClosable="True" />
+                <Grid>
+                    <Button x:Name="LoginButton" Content="Log in" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="LoginButton_Click" />
+                    <ProgressRing x:Name="LoginProgress" IsActive="False" Width="20" Height="20" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                </Grid>
+                <Button x:Name="CancelButton" Content="Cancel" HorizontalAlignment="Stretch" Visibility="Collapsed" Click="CancelButton_Click" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
