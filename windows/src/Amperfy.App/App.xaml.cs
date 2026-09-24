@@ -26,9 +26,14 @@ public partial class App : Application
             CrashLog.Write($"Initialization failed: {ex}");
             throw;
         }
+        SettingsBootstrap.Initialize(services);
         _window = new MainWindow();
         services.MainWindow = _window;
-        _window.Closed += (_, _) => services.Shutdown();
+        _window.Closed += (_, _) =>
+        {
+            SettingsBootstrap.Shutdown();
+            services.Shutdown();
+        };
         _window.Activate();
         CrashLog.Write("Window activated");
     }

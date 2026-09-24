@@ -71,6 +71,18 @@ public sealed partial class MainWindow : Window
 
     public void UpdateBackButton(bool canGoBack) => AppTitleBar.IsBackButtonVisible = canGoBack;
 
+    /// Applies the appearance mode (light / dark / system) to the window content (settings).
+    public void ApplyRequestedTheme(ElementTheme theme) => RootGrid.RequestedTheme = theme;
+
+    /// Re-evaluates the theme resources of the window content, e.g. after the accent color changed
+    /// (toggles the requested theme once).
+    public void RefreshThemeResources()
+    {
+        var requested = RootGrid.RequestedTheme;
+        RootGrid.RequestedTheme = RootGrid.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
+        RootGrid.RequestedTheme = requested;
+    }
+
     private void AppTitleBar_BackRequested(TitleBar sender, object args) => _services.Navigation.GoBack();
 
     private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args) => PaneToggleRequested?.Invoke();
