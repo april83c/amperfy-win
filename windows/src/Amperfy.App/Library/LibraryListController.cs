@@ -131,7 +131,7 @@ public sealed class LibraryListController
         Activate(item);
     }
 
-    /// Default activation: containers open their detail page, playables play.
+    /// Activation: containers open their detail page, playables play (or ItemActivated).
     public void Activate(LibraryItem item)
     {
         if (ItemActivated is { } handler)
@@ -139,6 +139,13 @@ public sealed class LibraryListController
             handler(item);
             return;
         }
+        ActivateDefault(item);
+    }
+
+    /// Default activation: containers open their detail page, playables play with the item's context.
+    public static void ActivateDefault(LibraryItem item)
+    {
+        var context = item.Context;
         if (item.Entity is SearchHistoryItem history && history.SearchedPlayableContainable is { } searched)
         {
             EntityActions.RecordSearchHistory(searched);
@@ -147,7 +154,7 @@ public sealed class LibraryListController
         {
             case AbstractPlayable playable:
                 if (!EntityActions.IsPlayable(playable)) return;
-                EntityActions.Play(Context.PlayContextProvider?.Invoke(item) ?? new PlayContext(playable));
+                EntityActions.Play(context.PlayContextProvider?.Invoke(item) ?? new PlayContext(playable));
                 break;
             case { } entity:
                 EntityActions.Open(entity);

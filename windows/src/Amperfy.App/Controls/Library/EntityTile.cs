@@ -62,6 +62,19 @@ public sealed partial class EntityTile : UserControl
         _root.Children.Add(_subtitle);
         Content = _root;
 
+        Tapped += (_, e) =>
+        {
+            if (!IsStandalone || _item is null) return;
+            if (e.OriginalSource is DependencyObject source && Ui.FindAncestor<Microsoft.UI.Xaml.Controls.Primitives.ButtonBase>(source) is not null) return;
+            e.Handled = true;
+            (Activated ?? LibraryListController.ActivateDefault)(_item);
+        };
+        KeyDown += (_, e) =>
+        {
+            if (!IsStandalone || _item is null || e.Key != Windows.System.VirtualKey.Enter) return;
+            e.Handled = true;
+            (Activated ?? LibraryListController.ActivateDefault)(_item);
+        };
         PointerEntered += (_, _) => _playButton.Visibility = CanPlay ? Visibility.Visible : Visibility.Collapsed;
         PointerExited += (_, _) => _playButton.Visibility = Visibility.Collapsed;
         DataContextChanged += (_, args) =>
@@ -87,6 +100,25 @@ public sealed partial class EntityTile : UserControl
 
     /// Fixed tile width (home rows); in grids the width comes from the list context.
     public double TileWidth { get; set; } = double.NaN;
+
+    /// Tile outside of a ListView/GridView (home rows, artist albums): click / Enter activates it.
+    public bool IsStandalone
+    {
+        get => _isStandalone;
+        set
+        {
+            _isStandalone = value;
+            IsTabStop = value;
+            UseSystemFocusVisuals = value;
+        }
+    }
+
+    private bool _isStandalone;
+
+    /// Activation of a standalone tile (default: open container / play playable).
+    public Action<LibraryItem>? Activated { get; set; }
+
+    public LibraryItem? Item => _item;
 
     private bool CanPlay => _item?.Container is { } c && (c is not AbstractPlayable p || EntityActions.IsPlayable(p));
 
