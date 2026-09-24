@@ -38,7 +38,7 @@ jobs:
         run: dotnet publish windows/src/Amperfy.App/Amperfy.App.csproj -c Release -r win-x64 -p:Platform=x64 -o out/Amperfy-win-x64
       - name: List published files
         shell: pwsh
-        run: Get-ChildItem out/Amperfy-win-x64 -File | Where-Object { $_.Extension -in '.pri','.xbf','.exe','.winmd' -or $_.Name -like 'Microsoft.UI*' -or $_.Name -like 'Amperfy*' } | Format-Table Name, Length
+        run: Get-ChildItem out/Amperfy-win-x64 -Recurse -File | Where-Object { $_.Extension -in '.pri','.xbf' -or $_.Name -like 'Amperfy*' } | Format-Table FullName, Length -AutoSize
       - name: Smoke test (launch + screenshot)
         shell: pwsh
         run: ./windows/scripts/smoke-test.ps1 -ExePath out/Amperfy-win-x64/Amperfy.exe -OutDir out/smoke
