@@ -107,4 +107,27 @@ public class ServerIntegrationTest(ITestOutputHelper output)
             output.WriteLine($"Random songs: {random.Playables.Count}");
         });
     }
+
+    [Fact]
+    public void AmperKitLoginAndInitialSync()
+    {
+        if (Config() is not { } cfg) return;
+        SingleThreadSynchronizationContext.Run(async () =>
+        {
+            CacheFileManager.Shared = new CacheFileManager(Path.Combine(Path.GetTempPath(), "amperfy-it", Guid.NewGuid().ToString("N")));
+            using var kit = new AmperKit(PersistentStorage.CreateInMemory(), new AlwaysOnlineNetworkMonitor());
+            Assert.False(kit.IsLoggedIn);
+            var account = await kit.LoginAsync(cfg.Url, cfg.User, cfg.Password, BackendApiType.NotDetected);
+            Assert.True(kit.IsLoggedIn);
+            Assert.Equal(account.Info, kit.Settings.Accounts.Active);
+            await Assert.ThrowsAsync<AuthenticationError>(() => kit.LoginAsync(cfg.Url, cfg.User, cfg.Password, BackendApiType.NotDetected));
+            var status = await kit.SyncInitialAsync(account, new SyncProgress());
+            Assert.Equal(SyncCompletionStatus.Completed, status);
+            var acc = kit.ActiveAccount!;
+            Assert.Equal(5, kit.Library.GetAlbumCount(acc));
+            kit.Logout(acc.Info);
+            Assert.False(kit.IsLoggedIn);
+            Assert.Equal(0, kit.Library.GetAlbumCount(acc));
+        });
+    }
 }
