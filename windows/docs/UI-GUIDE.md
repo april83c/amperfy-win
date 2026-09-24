@@ -63,6 +63,18 @@ The XAML compiler runs only in the Windows CI build. `scripts/linux-check.sh` co
   - For context menus, use `ContextFlyout` on the item template root, or handle `RightTapped` / `ContextRequested` in code.
 - **Community toolkit:** CommunityToolkit.WinUI controls available: `SettingsCard`, `SettingsExpander` (`xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"`), `Segmented`.
 
+## Player UI
+- `Services/Player/PlayerUi` holds the shared player logic (port of `PlayerUIHandler`):
+  - commands: `TogglePlayPause`, `Previous`/`Next` (skip in podcast mode), `SetVolume`, `ClearUserQueue`, …;
+  - navigation: `ShowAlbum/ShowArtist(playable)`, `ShowEntity(entity)`;
+  - panes and windows: `ToggleQueuePane`, `ToggleLyricsPane`, `ToggleNowPlaying`, `ToggleMiniPlayer`;
+  - menus and buttons: `CreateSleepTimerMenuItem`, `CreatePlaybackRateMenuItem`, `CreatePlayerOptionsFlyout`, `CreateVolumeButton`.
+- After changing the queues outside the player facade's notifying methods (remove, move, clear), call `PlayerUi.NotifyQueueModified()`.
+- To observe the player, keep a `PlayerObserver` in a field, call `Register()` once, and set `IsActive` on `Loaded` / `Unloaded`. The player keeps its observers as weak references.
+- Reusable controls live in `Controls/Player`: `PlayerTransportControls`, `SeekBar`, `QueueView`, `LyricsView` and `MiniPlayerWindow`. Create them in code.
+- Pages you navigate to must be XAML pages (`.xaml` + `.xaml.cs`). `Frame.Navigate` to a code-only page crashes.
+- Keyboard shortcuts are in `PlayerKeyboardShortcuts.All`. Media keys go through the system media transport controls (`Services/Audio/SystemMediaControls`).
+
 ## Verifying changes
 - `./scripts/linux-check.sh` compiles the app's C# on Linux; it must end with `Build succeeded`.
 - `dotnet test tests/Amperfy.Core.Tests` runs the core tests.
