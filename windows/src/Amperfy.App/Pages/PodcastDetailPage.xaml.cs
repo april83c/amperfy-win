@@ -28,7 +28,7 @@ public sealed partial class PodcastDetailPage : Page
         _context.HostPageType = typeof(PodcastDetailPage);
         _context.Changed = () => Header.Refresh();
         _controller = new LibraryListController(ItemsList, _context, LibraryListMode.Playables);
-        Toolbar.FilterPlaceholder = "Search in \"Podcast\"";
+        Toolbar.FilterPlaceholder = "Filter episodes";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
         Toolbar.AttachFinder(_controller);

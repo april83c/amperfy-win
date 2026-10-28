@@ -32,7 +32,7 @@ public sealed partial class AlbumDetailPage : Page
                 : null;
         _context.Changed = RefreshHeader;
         _controller = new LibraryListController(ItemsList, _context, LibraryListMode.Playables);
-        Toolbar.FilterPlaceholder = "Search in \"Album\"";
+        Toolbar.FilterPlaceholder = "Filter album";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
         Toolbar.AttachFinder(_controller);

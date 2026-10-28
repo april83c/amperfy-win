@@ -33,7 +33,7 @@ public sealed partial class DirectoryPage : Page, ILibraryCategoryPage
                 : null;
         _context.Changed = () => Header.Refresh();
         _controller = new LibraryListController(ItemsList, _context, LibraryListMode.Mixed);
-        Toolbar.FilterPlaceholder = "Directories and Songs";
+        Toolbar.FilterPlaceholder = "Filter directories and songs";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
         Toolbar.AttachFinder(_controller);

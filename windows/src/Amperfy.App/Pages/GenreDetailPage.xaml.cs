@@ -48,7 +48,7 @@ public sealed partial class GenreDetailPage : Page
             ReloadList();
         };
         HeaderExtras.Children.Add(_selector);
-        Toolbar.FilterPlaceholder = "Artists, Albums and Songs";
+        Toolbar.FilterPlaceholder = "Filter artists, albums and songs";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
         Toolbar.AttachFinder(_controller);

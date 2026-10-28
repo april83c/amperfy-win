@@ -52,7 +52,7 @@ public sealed partial class ArtistDetailPage : Page
         HeaderExtras.Children.Add(_albumsGrid);
         HeaderExtras.Children.Add(_songsTitle);
 
-        Toolbar.FilterPlaceholder = "Albums and Songs";
+        Toolbar.FilterPlaceholder = "Filter albums and songs";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
         Toolbar.AttachFinder(_controller);
