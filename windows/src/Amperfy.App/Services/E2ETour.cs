@@ -83,6 +83,16 @@ public static class E2ETour
             if (album is not null) nav.Navigate(typeof(AlbumDetailPage), album);
             return Task.CompletedTask;
         });
+        yield return ("detail-album-jump-to", () =>
+        {
+            // "Jump to" search: third song of the album (selected, list not filtered)
+            if (services.Navigation.Frame?.Content is FrameworkElement page && Amperfy.App.Controls.DetailListToolbar.FindIn(page) is { } toolbar)
+            {
+                var album = library.GetAlbums(account).OrderByDescending(a => a.SongCount).FirstOrDefault();
+                if (album?.Songs.Skip(2).FirstOrDefault() is { } song) toolbar.JumpTo(song.Title);
+            }
+            return Task.CompletedTask;
+        });
         yield return ("detail-genre", () =>
         {
             var genre = library.GetGenres(account).FirstOrDefault();

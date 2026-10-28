@@ -51,6 +51,7 @@ public sealed partial class GenreDetailPage : Page
         Toolbar.FilterPlaceholder = "Artists, Albums and Songs";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
+        Toolbar.AttachFinder(_controller);
         Toolbar.AttachAccelerators(this);
     }
 

@@ -31,6 +31,7 @@ public sealed partial class PodcastDetailPage : Page
         Toolbar.FilterPlaceholder = "Search in \"Podcast\"";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
+        Toolbar.AttachFinder(_controller);
         Toolbar.AttachAccelerators(this);
     }
 

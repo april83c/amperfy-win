@@ -54,6 +54,7 @@ public sealed partial class PlaylistDetailPage : Page
         Toolbar.IsFilterVisible = false;
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
+        Toolbar.AttachFinder(_controller);
         Toolbar.AttachAccelerators(this);
 
         ItemsList.SelectionChanged += (_, _) => _removeButton.IsEnabled = _isEditing && ItemsList.SelectedItems.Count > 0;
@@ -131,11 +132,15 @@ public sealed partial class PlaylistDetailPage : Page
         return new PlayContext(playlist, index, playables);
     }
 
-    private void Reload() => Reload(keepIfUnchanged: false);
+    private void Reload() => Reload(rebuild: false);
 
+    // playable shown by each row (a sync can change the song of an existing playlist item)
     private List<AbstractPlayable?> _shownPlayables = [];
 
-    private void Reload(bool keepIfUnchanged)
+    /// Shows the playlist items. Changes (removed items, appended items, changed songs) are applied
+    /// to the existing list so the scroll position stays; <paramref name="rebuild"/> recreates all
+    /// rows (e.g. when switching the edit mode) and restores the scroll position.
+    private void Reload(bool rebuild)
     {
         if (_playlist is not { } playlist) return;
         var onlyCached = Toolbar.OnlyCached && !_isEditing;
@@ -143,20 +148,89 @@ public sealed partial class PlaylistDetailPage : Page
         try { _services.Library.LoadPlaylistItems(playlist); }
         catch (Exception ex) { Amperfy.Core.Common.AmperfyLog.Error("PlaylistDetail", $"Loading items failed: {ex.Message}"); }
         var entities = playlist.Items.Where(i => i.Playable is { } p && (!onlyCached || p.IsCached)).ToList();
-        // unchanged (e.g. after a sync without changes): keep the list (no rebuild of all rows)
-        var playables = entities.Select(i => i.Playable).ToList();
-        if (keepIfUnchanged && _items.Count == entities.Count && _shownPlayables.SequenceEqual(playables) &&
-            _items.OfType<LibraryItem>().Select(i => i.Entity).SequenceEqual(entities))
-        {
-            UpdateEmptyText(onlyCached);
-            return;
-        }
+        if (rebuild || !TryUpdateInPlace(entities)) Rebuild(entities);
+        UpdateEmptyText(onlyCached);
+    }
+
+    private void Rebuild(List<PlaylistItem> entities)
+    {
+        var offset = Scroller?.VerticalOffset ?? 0;
         var index = 0;
         // one reset instead of one change notification per item
         _items = new ObservableCollection<object>(entities.Select(item => (object)new LibraryItem(item, _context, index++)));
-        _shownPlayables = playables;
+        _shownPlayables = entities.Select(i => i.Playable).ToList();
         ItemsList.ItemsSource = _items;
-        UpdateEmptyText(onlyCached);
+        if (offset > 0)
+        {
+            // restore the scroll position once the new rows are laid out
+            void Restore(object? sender, object e)
+            {
+                ItemsList.LayoutUpdated -= Restore;
+                Scroller?.ChangeView(null, offset, null, disableAnimation: true);
+            }
+            ItemsList.LayoutUpdated += Restore;
+        }
+    }
+
+    /// Applies removals, appended items and changed songs to the shown list. Returns false if the
+    /// change is too big for that (then the list is rebuilt).
+    private bool TryUpdateInPlace(List<PlaylistItem> entities)
+    {
+        if (_items.Count == 0 || _items.Count != _shownPlayables.Count) return false;
+        var shown = _items.OfType<LibraryItem>().ToList();
+        if (shown.Count != _items.Count) return false;
+        // shown items not in the new list (in order) are removed; new items after the last kept one are appended
+        var keep = new bool[shown.Count];
+        var next = 0;
+        for (var i = 0; i < shown.Count; i++)
+        {
+            if (next < entities.Count && ReferenceEquals(shown[i].Entity, entities[next]))
+            {
+                keep[i] = true;
+                next++;
+            }
+        }
+        var removed = shown.Count - next;
+        var appended = entities.Count - next;
+        if (removed + appended > 200) return false;
+        for (var i = shown.Count - 1; i >= 0; i--)
+        {
+            if (keep[i]) continue;
+            _items.RemoveAt(i);
+            _shownPlayables.RemoveAt(i);
+        }
+        for (var i = next; i < entities.Count; i++)
+        {
+            _items.Add(new LibraryItem(entities[i], _context, i));
+            _shownPlayables.Add(entities[i].Playable);
+        }
+        for (var i = 0; i < _items.Count; i++)
+        {
+            if (_items[i] is not LibraryItem item) continue;
+            item.Index = i;
+            // song of the item changed (server sync): new row content
+            if (!ReferenceEquals(_shownPlayables[i], entities[i].Playable))
+            {
+                _items[i] = new LibraryItem(entities[i], _context, i);
+                _shownPlayables[i] = entities[i].Playable;
+            }
+        }
+        return true;
+    }
+
+    private ScrollViewer? _scroller;
+
+    private ScrollViewer? Scroller => _scroller ??= FindScrollViewer(ItemsList);
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject root)
+    {
+        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is ScrollViewer viewer) return viewer;
+            if (FindScrollViewer(child) is { } found) return found;
+        }
+        return null;
     }
 
     private void UpdateEmptyText(bool onlyCached)
@@ -190,7 +264,7 @@ public sealed partial class PlaylistDetailPage : Page
         ItemsList.CanReorderItems = isEditing;
         ItemsList.AllowDrop = isEditing;
         UpdateEditControls();
-        Reload();
+        Reload(rebuild: true); // rows show the edit mode (reorder handle)
     }
 
     private async Task FinishEditingAsync()
@@ -227,6 +301,7 @@ public sealed partial class PlaylistDetailPage : Page
         _services.Library.SaveContext();
         var index = 0;
         foreach (var libraryItem in _items.OfType<LibraryItem>()) libraryItem.Index = index++;
+        _shownPlayables = _items.OfType<LibraryItem>().Select(i => i.Playable).ToList();
         Header.Refresh();
         if (playlist.Account is { } account)
             _ = CategoryPageHelper.SyncAsync("Playlist Upload Order Update", () => EntityActions.SyncerFor(account).SyncUploadPlaylistOrderAsync(playlist));
@@ -303,6 +378,6 @@ public sealed partial class PlaylistDetailPage : Page
         Header.IsBusy = false;
         if (_playlist != playlist || _isEditing) return;
         Header.Refresh();
-        Reload(keepIfUnchanged: true);
+        Reload();
     }
 }

@@ -32,7 +32,7 @@ public static class PlayerKeyboardShortcuts
         new("Ctrl+T", "Repeat (off / all / single)"),
         new("Ctrl+M", "Switch music / podcast mode"),
         new("Ctrl+L", "Go to current song"),
-        new("Ctrl+F", "Search"),
+        new("Ctrl+F", "Search (in playlists, albums and other song lists: jump to a song)"),
         new("Ctrl+Shift+P", "Open / close the now playing view (Esc closes it)"),
         new("Ctrl+Shift+Q", "Show / hide the queue"),
         new("Ctrl+Shift+L", "Show / hide the lyrics"),
@@ -50,6 +50,8 @@ public static class PlayerKeyboardShortcuts
         new("Right click / Shift+F10 / Menu key", "Context menu of the selected item"),
         new("Delete", "Remove the selected item (queue, playlist while editing)"),
         new("F5", "Reload the current page from the server"),
+        new("Ctrl+F in a song list", "Jump to a song without filtering the list; Enter / F3 next match, Shift+Enter / Shift+F3 previous, Esc goes to the match"),
+        new("Ctrl+Shift+F", "Filter the list"),
         new("Esc", "Clear the filter of a list; close the now playing view"),
     ];
 
@@ -172,7 +174,11 @@ public static class PlayerKeyboardShortcuts
                 PlayerUi.ToggleNowPlaying();
                 return true;
             case VirtualKey.F when !shift && window is MainWindow main && main.SearchBoxControl.Visibility == Visibility.Visible:
-                main.SearchBoxControl.Focus(FocusState.Keyboard);
+                // lists with a "Jump to" search (playlist, album, ...) use Ctrl+F for it
+                if (Amperfy.App.Controls.DetailListToolbar.FindIn(AppServices.Instance.Navigation.Frame?.Content as DependencyObject) is { } toolbar)
+                    toolbar.FocusFind();
+                else
+                    main.SearchBoxControl.Focus(FocusState.Keyboard);
                 return true;
         }
         return false;

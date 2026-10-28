@@ -35,6 +35,7 @@ public sealed partial class AlbumDetailPage : Page
         Toolbar.FilterPlaceholder = "Search in \"Album\"";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
+        Toolbar.AttachFinder(_controller);
         Toolbar.AttachAccelerators(this);
     }
 

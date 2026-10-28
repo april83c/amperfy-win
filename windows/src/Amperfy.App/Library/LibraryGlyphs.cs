@@ -3,6 +3,8 @@ namespace Amperfy.App.Library;
 /// Segoe Fluent Icons glyphs used by the library browsing UI (in addition to Helpers/Icons).
 public static class LibraryGlyphs
 {
+    public const string ChevronUp = "\uE70E";
+    public const string ChevronDown = "\uE70D";
     public const string Star = "";
     public const string StarFill = "";
     public const string Sort = "";

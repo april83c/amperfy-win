@@ -36,6 +36,7 @@ public sealed partial class DirectoryPage : Page, ILibraryCategoryPage
         Toolbar.FilterPlaceholder = "Directories and Songs";
         Toolbar.FilterChanged += Reload;
         Toolbar.RefreshRequested += () => _ = SyncAsync(showBusy: true);
+        Toolbar.AttachFinder(_controller);
         Toolbar.AttachAccelerators(this);
     }
 
