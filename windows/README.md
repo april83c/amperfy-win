@@ -17,7 +17,8 @@ implementation. `docs/PORTING.md` explains why the port uses C# rather than Swif
 - **Home:** configurable sections (random, newest and recently played albums; random artists and songs; playlists; podcast episodes; radios).
 - **Search:** local and server search with categories and search history.
 - **Context menus:** Play, Shuffle, Instant Mix, queue insert/append, show album/artist, lyrics, favorite, rating, add to playlist, download, delete cache, delete on server, share, save a copy, go to site, copy ID. The same menu is used in lists, the queue and the player.
-- **Playlists:** create, rename, reorder by drag & drop, remove items, add songs; synced to the server.
+- **Playlists:** create, rename, add songs and remove them, reorder by drag & drop; synced to the server. With several songs selected, you can remove them, drag them as a block, or cut them (Ctrl+X) and paste them after another song (right-click > Paste After, or Ctrl+V). A cut keeps their order.
+- **Jump to:** list pages have a "Jump to" box (Ctrl+F, F3 / Shift+F3) that scrolls to matching songs without filtering the list.
 - **Player:**
   - Gapless playback (MediaPlayer + MediaPlaybackList).
   - Streaming with transcoding and bitrate limits, separate for metered and unmetered networks.
