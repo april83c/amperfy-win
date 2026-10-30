@@ -16,7 +16,8 @@ using VirtualKey = Windows.System.VirtualKey;
 namespace Amperfy.App.Pages;
 
 /// Playlist detail (port of PlaylistDetailVC + PlaylistEditVC): header, the playlist items; edit
-/// mode to rename, reorder (drag and drop), remove and add songs. Changes are uploaded to the
+/// mode to rename and add songs. Selected songs can be removed, dragged and cut / pasted (see
+/// PlaylistDetailPage.Selection.cs). Changes are uploaded to the
 /// server. The playlist is synced from the server when shown.
 public sealed partial class PlaylistDetailPage : Page
 {
@@ -30,8 +31,6 @@ public sealed partial class PlaylistDetailPage : Page
     private readonly Button _removeButton;
     private Playlist? _playlist;
     private bool _isEditing;
-    private LibraryItem? _draggedItem;
-    private List<object> _dragSnapshot = [];
 
     public PlaylistDetailPage()
     {
@@ -46,7 +45,7 @@ public sealed partial class PlaylistDetailPage : Page
         _editButton = Ui.TextButton("Edit", Icons.Edit, (_, _) => SetEditing(true), tooltip: "Edit playlist");
         _doneButton = Ui.TextButton("Done", LibraryGlyphs.Accept, (_, _) => _ = FinishEditingAsync(), accent: true, tooltip: "Finish editing");
         _addButton = Ui.TextButton("Add Songs", Icons.Add, (_, _) => _ = AddSongsAsync(), tooltip: "Add songs from the library");
-        _removeButton = Ui.TextButton("Remove", Icons.Delete, (_, _) => _ = RemoveSelectedAsync(), tooltip: "Remove selected songs (Del)");
+        _removeButton = Ui.TextButton("Remove", Icons.Delete, (_, _) => _ = RemoveItemsAsync(SelectedPlaylistItems()), tooltip: "Remove selected songs (Del)");
         Header.ExtraButtons.Children.Add(_editButton);
         Toolbar.Buttons.Children.Add(_addButton);
         Toolbar.Buttons.Children.Add(_removeButton);
@@ -58,9 +57,7 @@ public sealed partial class PlaylistDetailPage : Page
         Toolbar.AttachAccelerators(this);
 
         ItemsList.SelectionChanged += (_, _) => _removeButton.IsEnabled = _isEditing && ItemsList.SelectedItems.Count > 0;
-        ItemsList.DragItemsStarting += OnDragItemsStarting;
-        ItemsList.DragItemsCompleted += OnDragItemsCompleted;
-        ItemsList.KeyDown += OnListKeyDown;
+        SetupMultiSelection();
         UpdateEditControls();
     }
 
@@ -88,6 +85,7 @@ public sealed partial class PlaylistDetailPage : Page
         base.OnNavigatedFrom(e);
         LibraryEventHub.OfflineModeChanged -= OnOfflineModeChanged;
         LibraryEventHub.EntityChanged -= OnEntityChanged;
+        CancelCut();
         if (_isEditing) _ = FinishEditingAsync();
     }
 
@@ -149,6 +147,7 @@ public sealed partial class PlaylistDetailPage : Page
         catch (Exception ex) { Amperfy.Core.Common.AmperfyLog.Error("PlaylistDetail", $"Loading items failed: {ex.Message}"); }
         var entities = playlist.Items.Where(i => i.Playable is { } p && (!onlyCached || p.IsCached)).ToList();
         if (rebuild || !TryUpdateInPlace(entities)) Rebuild(entities);
+        PruneCut();
         UpdateEmptyText(onlyCached);
     }
 
@@ -179,6 +178,7 @@ public sealed partial class PlaylistDetailPage : Page
         if (_items.Count == 0 || _items.Count != _shownPlayables.Count) return false;
         var shown = _items.OfType<LibraryItem>().ToList();
         if (shown.Count != _items.Count) return false;
+        if (TryReorderInPlace(shown, entities)) return true;
         // shown items not in the new list (in order) are removed; new items after the last kept one are appended
         var keep = new bool[shown.Count];
         var next = 0;
@@ -218,6 +218,30 @@ public sealed partial class PlaylistDetailPage : Page
         return true;
     }
 
+    /// Same items in a different order (moved songs): moves the rows (keeps the scroll position and
+    /// the selection).
+    private bool TryReorderInPlace(List<LibraryItem> shown, List<PlaylistItem> entities)
+    {
+        if (shown.Count != entities.Count) return false;
+        var shownSet = shown.Select(i => i.Entity).ToHashSet();
+        if (!entities.All(e => shownSet.Contains(e))) return false;
+        if (shown.Select(i => i.Entity).SequenceEqual(entities)) return false; // unchanged: other checks
+        for (var i = 0; i < entities.Count; i++)
+        {
+            var current = (LibraryItem)_items[i];
+            if (ReferenceEquals(current.Entity, entities[i])) continue;
+            var from = _items.IndexOf(shown.First(x => ReferenceEquals(x.Entity, entities[i])));
+            _items.Move(from, i);
+        }
+        for (var i = 0; i < _items.Count; i++)
+        {
+            var item = (LibraryItem)_items[i];
+            item.Index = i;
+            _shownPlayables[i] = entities[i].Playable;
+        }
+        return true;
+    }
+
     private ScrollViewer? _scroller;
 
     private ScrollViewer? Scroller => _scroller ??= FindScrollViewer(ItemsList);
@@ -250,6 +274,7 @@ public sealed partial class PlaylistDetailPage : Page
         _removeButton.IsEnabled = _isEditing && ItemsList.SelectedItems.Count > 0;
         Toolbar.IsCachedToggleVisible = !_isEditing;
         Toolbar.IsRefreshVisible = !_isEditing;
+        UpdateDragAndDrop();
     }
 
     private void SetEditing(bool isEditing)
@@ -260,9 +285,7 @@ public sealed partial class PlaylistDetailPage : Page
         _controller.ItemActivated = isEditing ? _ => { } : null;
         Header.IsEditingName = isEditing;
         ItemsList.SelectionMode = isEditing ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Extended;
-        ItemsList.CanDragItems = isEditing;
-        ItemsList.CanReorderItems = isEditing;
-        ItemsList.AllowDrop = isEditing;
+        UpdateDragAndDrop();
         UpdateEditControls();
         Reload(rebuild: true); // rows show the edit mode (reorder handle)
     }
@@ -278,76 +301,6 @@ public sealed partial class PlaylistDetailPage : Page
         Header.Refresh();
         if (playlist.Account is { } account)
             await CategoryPageHelper.SyncAsync("Playlist Update Name", () => EntityActions.SyncerFor(account).SyncUploadPlaylistNameAsync(playlist));
-    }
-
-    private void OnDragItemsStarting(object sender, DragItemsStartingEventArgs e)
-    {
-        _draggedItem = e.Items.OfType<LibraryItem>().FirstOrDefault();
-        _dragSnapshot = _items.ToList();
-        if (e.Items.Count != 1) e.Cancel = true; // one item at a time (like the Swift table view)
-    }
-
-    private void OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs e)
-    {
-        if (_playlist is not { } playlist || _draggedItem is not { } item || e.DropResult != DataPackageOperation.Move) return;
-        var newPosition = _items.IndexOf(item);
-        _draggedItem = null;
-        if (newPosition < 0 || newPosition >= _dragSnapshot.Count) return;
-        // map list positions to playlist indexes (the list may skip orphaned items)
-        var target = (_dragSnapshot[newPosition] as LibraryItem)?.Entity as PlaylistItem;
-        if (item.Entity is not PlaylistItem moved || target is null) return;
-        if (playlist.GetFirstIndex(moved) is not { } from || playlist.GetFirstIndex(target) is not { } to || from == to) return;
-        playlist.MovePlaylistItem(from, to);
-        _services.Library.SaveContext();
-        var index = 0;
-        foreach (var libraryItem in _items.OfType<LibraryItem>()) libraryItem.Index = index++;
-        _shownPlayables = _items.OfType<LibraryItem>().Select(i => i.Playable).ToList();
-        Header.Refresh();
-        if (playlist.Account is { } account)
-            _ = CategoryPageHelper.SyncAsync("Playlist Upload Order Update", () => EntityActions.SyncerFor(account).SyncUploadPlaylistOrderAsync(playlist));
-    }
-
-    private void OnListKeyDown(object sender, KeyRoutedEventArgs e)
-    {
-        if (!_isEditing || e.Key != VirtualKey.Delete || e.OriginalSource is TextBox) return;
-        e.Handled = true;
-        _ = RemoveSelectedAsync();
-    }
-
-    private async Task RemoveSelectedAsync()
-    {
-        if (_playlist is not { } playlist) return;
-        var selected = ItemsList.SelectedItems.OfType<LibraryItem>().Select(i => i.Entity).OfType<PlaylistItem>().ToList();
-        if (selected.Count == 0) return;
-        await RemoveItemsAsync(playlist, selected);
-    }
-
-    private async Task RemoveItemsAsync(Playlist playlist, List<PlaylistItem> items)
-    {
-        var syncer = playlist.Account is { } account && _services.Settings.User.IsOnlineMode ? EntityActions.SyncerFor(account) : null;
-        try
-        {
-            foreach (var item in items.OrderByDescending(i => i.Order))
-            {
-                if (playlist.GetFirstIndex(item) is not { } index) continue;
-                if (syncer is not null) await syncer.SyncUploadPlaylistDeleteSongAsync(playlist, index);
-                playlist.Remove(index);
-            }
-        }
-        catch (Exception ex)
-        {
-            _services.EventLogger.Report("Playlist Upload Entry Remove", ex);
-        }
-        _services.Library.SaveContext();
-        Header.Refresh();
-        Reload();
-        UpdateEditControls();
-    }
-
-    private IEnumerable<MenuFlyoutItemBase> BuildExtraMenuItems(LibraryItem item)
-    {
-        if (!CanEdit || _playlist is not { } playlist || item.Entity is not PlaylistItem playlistItem) yield break;
-        yield return Ui.MenuItem("Remove from Playlist", Icons.Delete, () => _ = RemoveItemsAsync(playlist, [playlistItem]));
     }
 
     private async Task AddSongsAsync()

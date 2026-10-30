@@ -39,6 +39,9 @@ public sealed class LibraryListContext
     /// Raised when display settings (e.g. tile size) changed; visible rows refresh.
     public event Action? LayoutChanged;
 
+    /// Rows shown dimmed (e.g. cut playlist items waiting to be pasted). Call NotifyLayoutChanged after changes.
+    public Func<LibraryItem, bool>? IsDimmed { get; set; }
+
     public void NotifyLayoutChanged() => LayoutChanged?.Invoke();
 }
 

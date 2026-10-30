@@ -105,6 +105,30 @@ public static class E2ETour
             if (playlist is not null) nav.Navigate(typeof(PlaylistDetailPage), playlist);
             return Task.CompletedTask;
         });
+        // multi selection in a playlist: create one with 6 songs, cut songs 1 and 3, paste them after song 5
+        Playlist? multiPlaylist = null;
+        yield return ("playlist-multi-open", async () =>
+        {
+            var songs = library.GetSongs(account).Take(6).ToList();
+            if (songs.Count < 6) return;
+            multiPlaylist = await Amperfy.App.Library.EntityActions.CreatePlaylistAsync(account, "E2E Multi Selection");
+            if (multiPlaylist is null) return;
+            await Amperfy.App.Library.EntityActions.SyncerFor(account).SyncUploadPlaylistAddSongsAsync(multiPlaylist, songs);
+            multiPlaylist.Append(songs.Cast<AbstractPlayable>().ToList());
+            library.SaveContext();
+            CrashLog.Write("E2E playlist before: " + string.Join(" | ", multiPlaylist.Items.Select(i => i.Playable?.Title)));
+            nav.Navigate(typeof(PlaylistDetailPage), multiPlaylist);
+        });
+        yield return ("playlist-multi-cut", () =>
+        {
+            if (services.Navigation.Frame?.Content is PlaylistDetailPage page) page.SelectAndCutForTour(0, 2);
+            return Task.CompletedTask;
+        });
+        yield return ("playlist-multi-paste", async () =>
+        {
+            if (services.Navigation.Frame?.Content is PlaylistDetailPage page)
+                CrashLog.Write("E2E playlist after paste: " + await page.PasteAfterForTourAsync(4));
+        });
         yield return ("detail-musicfolder", () =>
         {
             var folder = library.GetMusicFolders(account).FirstOrDefault();

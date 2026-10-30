@@ -631,6 +631,16 @@ public sealed class SubsonicLibrarySyncer : CommonLibrarySyncer, ILibrarySyncer
         ParseForError(response);
     }
 
+    /// One updatePlaylist request with all indexes (Subsonic removes them relative to the original order).
+    public async Task SyncUploadPlaylistDeleteSongsAsync(Playlist playlist, IReadOnlyList<int> indexes)
+    {
+        if (!IsSyncAllowed || indexes.Count == 0) return;
+        AmperfyLog.Info(LogCategory, $"Upload SongDelete on playlist \"{playlist.Name}\" at indexes: {string.Join(",", indexes)}");
+        await ValidatePlaylistIdAsync(playlist);
+        var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, indexes.Distinct().Order().ToList(), []);
+        ParseForError(response);
+    }
+
     public async Task SyncUploadPlaylistOrderAsync(Playlist playlist)
     {
         if (!IsSyncAllowed) return;

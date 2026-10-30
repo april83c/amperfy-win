@@ -142,6 +142,7 @@ public sealed class LibrarySyncerProxy : ILibrarySyncer
     public Task SyncUploadPlaylistNameAsync(Playlist playlist) => Active.SyncUploadPlaylistNameAsync(playlist);
     public Task SyncUploadPlaylistAddSongsAsync(Playlist playlist, IReadOnlyList<Song> songs) => Active.SyncUploadPlaylistAddSongsAsync(playlist, songs);
     public Task SyncUploadPlaylistDeleteSongAsync(Playlist playlist, int index) => Active.SyncUploadPlaylistDeleteSongAsync(playlist, index);
+    public Task SyncUploadPlaylistDeleteSongsAsync(Playlist playlist, IReadOnlyList<int> indexes) => Active.SyncUploadPlaylistDeleteSongsAsync(playlist, indexes);
     public Task SyncUploadPlaylistOrderAsync(Playlist playlist) => Active.SyncUploadPlaylistOrderAsync(playlist);
     public Task SyncUploadPlaylistDeleteAsync(string playlistId) => Active.SyncUploadPlaylistDeleteAsync(playlistId);
     public Task SyncDownPodcastsWithoutEpisodesAsync() => Active.SyncDownPodcastsWithoutEpisodesAsync();

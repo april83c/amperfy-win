@@ -196,6 +196,13 @@ public interface ILibrarySyncer
     Task SyncUploadPlaylistNameAsync(Playlist playlist);
     Task SyncUploadPlaylistAddSongsAsync(Playlist playlist, IReadOnlyList<Song> songs);
     Task SyncUploadPlaylistDeleteSongAsync(Playlist playlist, int index);
+
+    /// Removes the songs at the indexes (positions before the removal) from the server playlist.
+    /// Default: one request per song, highest index first.
+    async Task SyncUploadPlaylistDeleteSongsAsync(Playlist playlist, IReadOnlyList<int> indexes)
+    {
+        foreach (var index in indexes.Distinct().OrderByDescending(i => i)) await SyncUploadPlaylistDeleteSongAsync(playlist, index);
+    }
     Task SyncUploadPlaylistOrderAsync(Playlist playlist);
     Task SyncUploadPlaylistDeleteAsync(string playlistId);
     Task SyncDownPodcastsWithoutEpisodesAsync();

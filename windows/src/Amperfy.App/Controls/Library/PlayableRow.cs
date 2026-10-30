@@ -139,7 +139,11 @@ public sealed partial class PlayableRow : UserControl
         LibraryEventHub.PlayerChanged += OnPlayerChanged;
         LibraryEventHub.DownloadFinished += OnDownloadFinished;
         LibraryEventHub.EntityChanged += OnEntityChanged;
+        _subscribedContext = _item.Context;
+        _subscribedContext.LayoutChanged += Refresh;
     }
+
+    private LibraryListContext? _subscribedContext;
 
     private void Unsubscribe()
     {
@@ -148,6 +152,8 @@ public sealed partial class PlayableRow : UserControl
         LibraryEventHub.PlayerChanged -= OnPlayerChanged;
         LibraryEventHub.DownloadFinished -= OnDownloadFinished;
         LibraryEventHub.EntityChanged -= OnEntityChanged;
+        if (_subscribedContext is not null) _subscribedContext.LayoutChanged -= Refresh;
+        _subscribedContext = null;
     }
 
     private void OnPlayerChanged() => RefreshPlayingState();
@@ -169,7 +175,14 @@ public sealed partial class PlayableRow : UserControl
         if (Ui.FindAncestor<ListViewBase>(this) is { } list && list.SelectedItems.Count > 1 && list.SelectedItems.Contains(_item))
         {
             var playables = list.SelectedItems.OfType<LibraryItem>().Select(i => i.Playable).OfType<AbstractPlayable>().ToList();
-            return (new PlayableSelection(playables), new EntityActionOptions { HostPageType = _item.Context.HostPageType, Changed = OnChanged });
+            var selectionItem = _item;
+            return (new PlayableSelection(playables), new EntityActionOptions
+            {
+                HostPageType = _item.Context.HostPageType,
+                Changed = OnChanged,
+                // page actions for the selection (e.g. remove / cut selected playlist songs)
+                ExtraItems = selectionItem.Context.ExtraMenuItems is { } selectionExtra ? () => selectionExtra(selectionItem) : null,
+            });
         }
         var item = _item;
         return (playable, new EntityActionOptions
@@ -222,7 +235,7 @@ public sealed partial class PlayableRow : UserControl
         RefreshDownloadStatus();
         _reorderIcon.Visibility = isEditMode ? Visibility.Visible : Visibility.Collapsed;
         _moreButton.Visibility = isEditMode ? Visibility.Collapsed : Visibility.Visible;
-        Opacity = EntityActions.IsPlayable(playable) || isEditMode ? 1.0 : 0.5;
+        Opacity = context.IsDimmed?.Invoke(_item) == true ? 0.4 : EntityActions.IsPlayable(playable) || isEditMode ? 1.0 : 0.5;
         RefreshPlayingState();
     }
 

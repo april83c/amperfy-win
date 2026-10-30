@@ -309,6 +309,69 @@ public class Playlist : IPlayableContainable
         if (fromIndex < ArtworkItemMaxLookCount || to < ArtworkItemMaxLookCount) UpdateArtworkItems();
     }
 
+    /// Moves the items as one block (in their current playlist order) so that it follows
+    /// <paramref name="after"/>; null moves them to the start. If <paramref name="after"/> is one of
+    /// the moved items, the block is placed after the nearest preceding item that isn't moved.
+    /// Returns false if nothing changed.
+    public bool MoveItems(IEnumerable<PlaylistItem> itemsToMove, PlaylistItem? after)
+    {
+        var items = Sorted;
+        var moving = itemsToMove.Distinct().Where(items.Contains).ToHashSet();
+        if (moving.Count == 0) return false;
+        var before = items.ToList();
+        var oldFirstMoved = items.FindIndex(moving.Contains);
+        if (after is not null && moving.Contains(after))
+        {
+            var anchorIndex = items.IndexOf(after);
+            after = items.Take(anchorIndex).LastOrDefault(i => !moving.Contains(i));
+        }
+        var block = items.Where(moving.Contains).ToList();
+        items.RemoveAll(moving.Contains);
+        var insertAt = after is null ? 0 : items.IndexOf(after) + 1;
+        if (insertAt < 0) return false;
+        items.InsertRange(insertAt, block);
+        if (before.SequenceEqual(items)) return false;
+        // new orders for the block between its neighbours, otherwise renumber everything
+        var others = items.Where(i => !moving.Contains(i)).ToList();
+        var orders = GetOrdersToInsert(others, insertAt, block.Count);
+        if (orders is { } o && o.Count == block.Count)
+        {
+            for (var i = 0; i < block.Count; i++) block[i].Order = o[i];
+        }
+        else
+        {
+            ReassignOrder();
+        }
+        _sortedItems = null;
+        UpdateChangeDate();
+        if (oldFirstMoved < ArtworkItemMaxLookCount || insertAt < ArtworkItemMaxLookCount) UpdateArtworkItems();
+        return true;
+    }
+
+    /// Removes the items. Returns their indexes before the removal (ascending).
+    public List<int> RemoveItems(IEnumerable<PlaylistItem> itemsToRemove)
+    {
+        var items = Sorted;
+        var removing = itemsToRemove.Distinct().Where(items.Contains).ToHashSet();
+        var indexes = new List<int>();
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (removing.Contains(items[i])) indexes.Add(i);
+        }
+        if (indexes.Count == 0) return indexes;
+        items.RemoveAll(removing.Contains);
+        foreach (var item in removing)
+        {
+            ItemsRaw.Remove(item);
+            ArtworkItemsRaw.Remove(item);
+        }
+        UpdateChangeDate();
+        UpdateDuration(byReducing: removing.Sum(i => i.Playable?.Duration ?? 0));
+        if (indexes[0] < ArtworkItemMaxLookCount) UpdateArtworkItems();
+        UpdateSongCount();
+        return indexes;
+    }
+
     public void Remove(int at)
     {
         var items = Sorted;
