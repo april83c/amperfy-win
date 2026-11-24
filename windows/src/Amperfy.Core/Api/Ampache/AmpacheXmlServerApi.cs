@@ -302,9 +302,10 @@ public sealed class AmpacheXmlServerApi : IUrlCleanser
     public Task<ApiDataResponse> RequestPlaylistEditOnlyNameAsync(string id, string name) =>
         RequestActionAsync("playlist_edit", ("filter", id), ("name", name));
 
-    public Task<ApiDataResponse> RequestPlaylistEditAsync(string id, IReadOnlyList<string> songsIds) =>
-        RequestActionAsync("playlist_edit", ("filter", id), ("items", string.Join(",", songsIds)),
-            ("tracks", string.Join(",", Enumerable.Range(1, songsIds.Count).Select(Str))));
+    /// Sets the songs at the given (1-based) track positions.
+    public Task<ApiDataResponse> RequestPlaylistEditAsync(string id, IReadOnlyList<(string SongId, int Track)> items) =>
+        RequestActionAsync("playlist_edit", ("filter", id), ("items", string.Join(",", items.Select(i => i.SongId))),
+            ("tracks", string.Join(",", items.Select(i => Str(i.Track)))));
 
     public Task<ApiDataResponse> RequestRadiosAsync() => RequestActionAsync("live_streams");
 

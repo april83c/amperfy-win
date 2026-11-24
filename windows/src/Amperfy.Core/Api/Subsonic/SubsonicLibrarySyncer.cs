@@ -618,8 +618,7 @@ public sealed class SubsonicLibrarySyncer : CommonLibrarySyncer, ILibrarySyncer
         if (!IsSyncAllowed || songs.Count == 0) return;
         AmperfyLog.Info(LogCategory, $"Upload SongsAdded on playlist \"{playlist.Name}\"");
         await ValidatePlaylistIdAsync(playlist);
-        var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, [], songs.Select(s => s.Id).ToList());
-        ParseForError(response);
+        await AppendPlaylistSongsAsync(playlist, songs.Select(s => s.Id).ToList());
     }
 
     public async Task SyncUploadPlaylistDeleteSongAsync(Playlist playlist, int index)
@@ -631,25 +630,70 @@ public sealed class SubsonicLibrarySyncer : CommonLibrarySyncer, ILibrarySyncer
         ParseForError(response);
     }
 
-    /// One updatePlaylist request with all indexes (Subsonic removes them relative to the original order).
+    /// updatePlaylist requests with all indexes (Subsonic removes them relative to the order before
+    /// the request); split in chunks from the end so earlier chunks don't shift later indexes.
     public async Task SyncUploadPlaylistDeleteSongsAsync(Playlist playlist, IReadOnlyList<int> indexes)
     {
         if (!IsSyncAllowed || indexes.Count == 0) return;
         AmperfyLog.Info(LogCategory, $"Upload SongDelete on playlist \"{playlist.Name}\" at indexes: {string.Join(",", indexes)}");
         await ValidatePlaylistIdAsync(playlist);
-        var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, indexes.Distinct().Order().ToList(), []);
-        ParseForError(response);
+        await RemovePlaylistIndexesAsync(playlist, indexes);
     }
 
+    /// Subsonic can only remove indexes and append songs. Compares with the playlist on the server,
+    /// keeps the unchanged start, appends the rest in the new order and only then removes the old
+    /// rest: an interrupted upload leaves songs twice instead of losing them. The requests are split
+    /// so the URLs stay short for large playlists.
     public async Task SyncUploadPlaylistOrderAsync(Playlist playlist)
     {
         if (!IsSyncAllowed) return;
         AmperfyLog.Info(LogCategory, $"Upload OrderChange on playlist \"{playlist.Name}\"");
         await ValidatePlaylistIdAsync(playlist);
-        var songIdsToAdd = playlist.Playables.Select(p => p.Id).ToList();
-        var songIndicesToRemove = Enumerable.Range(0, songIdsToAdd.Count).ToList();
-        var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, songIndicesToRemove, songIdsToAdd);
+        var serverSongIds = await RequestPlaylistSongIdsAsync(playlist);
+        var upload = PlaylistOrderUpload.Create(serverSongIds, playlist.Playables.Select(p => p.Id).ToList());
+        if (upload.IsEmpty) return;
+        AmperfyLog.Info(LogCategory, $"Playlist \"{playlist.Name}\": keep {upload.KeptCount}, append {upload.SongIdsToAppend.Count}, remove {upload.IndexesToRemove.Count}");
+        await AppendPlaylistSongsAsync(playlist, upload.SongIdsToAppend);
+        await RemovePlaylistIndexesAsync(playlist, upload.IndexesToRemove);
+    }
+
+    /// Song ids of the playlist on the server, in playlist order.
+    private async Task<List<string>> RequestPlaylistSongIdsAsync(Playlist playlist)
+    {
+        var response = await _subsonicServerApi.RequestPlaylistSongsAsync(playlist.Id);
         ParseForError(response);
+        return await Task.Run(() => ParsePlaylistEntryIds(response.Data));
+    }
+
+    internal static List<string> ParsePlaylistEntryIds(byte[] data)
+    {
+        var ids = new List<string>();
+        using var reader = System.Xml.XmlReader.Create(new MemoryStream(data), new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Ignore });
+        while (reader.Read())
+        {
+            if (reader.NodeType == System.Xml.XmlNodeType.Element && reader.LocalName == "entry" && reader.GetAttribute("id") is { } id)
+                ids.Add(id);
+        }
+        return ids;
+    }
+
+    private async Task AppendPlaylistSongsAsync(Playlist playlist, IReadOnlyList<string> songIds)
+    {
+        foreach (var chunk in RequestChunks.Split(songIds, id => "&songIdToAdd=".Length + Uri.EscapeDataString(id).Length))
+        {
+            var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, [], chunk);
+            ParseForError(response);
+        }
+    }
+
+    private async Task RemovePlaylistIndexesAsync(Playlist playlist, IEnumerable<int> indexes)
+    {
+        var descending = indexes.Distinct().OrderByDescending(i => i);
+        foreach (var chunk in RequestChunks.Split(descending, i => "&songIndexToRemove=".Length + i.ToString(System.Globalization.CultureInfo.InvariantCulture).Length))
+        {
+            var response = await _subsonicServerApi.RequestPlaylistUpdateAsync(playlist.Id, playlist.Name, chunk.Order().ToList(), []);
+            ParseForError(response);
+        }
     }
 
     public async Task SyncUploadPlaylistDeleteAsync(string playlistId)

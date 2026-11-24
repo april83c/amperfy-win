@@ -660,10 +660,14 @@ public sealed class AmpacheLibrarySyncer : CommonLibrarySyncer, ILibrarySyncer
     {
         if (!IsSyncAllowed || playlist.SongCount <= 0) return;
         AmperfyLog.Info(LogCategory, $"Upload OrderChange on playlist \"{playlist.Name}\"");
-        var songIds = playlist.Playables.Select(p => p.Id).ToList();
-        if (songIds.Count == 0) return;
-        var response = await _ampacheXmlServerApi.RequestPlaylistEditAsync(playlist.Id, songIds);
-        ParseForError(response);
+        var items = playlist.Playables.Select((p, index) => (SongId: p.Id, Track: index + 1)).ToList();
+        if (items.Count == 0) return;
+        // track positions are independent: split so the URLs stay short for large playlists (",": "%2C")
+        foreach (var chunk in RequestChunks.Split(items, i => Uri.EscapeDataString(i.SongId).Length + 6 + i.Track.ToString(System.Globalization.CultureInfo.InvariantCulture).Length))
+        {
+            var response = await _ampacheXmlServerApi.RequestPlaylistEditAsync(playlist.Id, chunk);
+            ParseForError(response);
+        }
     }
 
     public async Task SyncUploadPlaylistDeleteAsync(string playlistId)
